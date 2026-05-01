@@ -1352,6 +1352,22 @@ function updateEstado(enc, novoEstado) {
   if(e){ e.estado=novoEstado; render(); }
 }
 
+// Global event delegation for dynamically rendered buttons
+document.addEventListener('click', async function(ev) {
+  const btn = ev.target.closest('#btn-save-dcc-config');
+  if (!btn) return;
+  const valor = parseFloat((document.getElementById('cfg-dcc-valor')||{}).value||3500);
+  const dias = parseInt((document.getElementById('cfg-dcc-dias')||{}).value||3);
+  if (isNaN(valor)||isNaN(dias)){ alert('Valores inválidos.'); return; }
+  state.dccConfig.limiteValor = valor;
+  state.dccConfig.limiteDias = dias;
+  console.log('Saving config:', valor, dias);
+  const ok = await writeDecisao({action:'saveConfig',limiteValor:valor,limiteDias:dias,utilizador:state.user.name});
+  console.log('Save result:', ok);
+  const saved = document.getElementById('cfg-dcc-saved');
+  if (saved){ saved.style.display='inline'; setTimeout(()=>{ saved.style.display='none'; },2000); }
+});
+
 render();
 </script>
 </body>
