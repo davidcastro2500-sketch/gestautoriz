@@ -158,6 +158,7 @@ let state = {
   decisoes:[], revisoes:[], decisoesLoaded:false, antigFilter:null,
   dccConfig: { limiteValor: 3500, limiteDias: 3 },
   emailConfig: { emailPHC: '', emailTeste: '', modoTeste: 'NAO', emailADM: 'adm@jpower.pt', emailDCC: 'dcc@jpower.pt' },
+  dashMes: null,
   modal:null, pipeline:[]
 };
 
@@ -757,25 +758,190 @@ function renderAnaliseRevisao(d) {
     <div style="padding:14px 16px;background:#fff;border:1px solid var(--g200);border-top:none">${dialogs}</div>`;
 }
 
+function calcDashboard(mesFilter) {
+  const dec = state.decisoes;
+  const now = new Date();
+  const mesFmt = (d) => { const dt = new Date(d); return isNaN(dt) ? null : dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0'); };
+
+  // Filter by month
+  const decFilt = mesFilter ? dec.filter(d => mesFmt(d.data_hora) === mesFilter) : dec;
+
+  const total = decFilt.length;
+  const aprovadas = decFilt.filter(d => d.estado === 'aprovada' || d.estado === 'aprovada_phc').length;
+  const recusadas = decFilt.filter(d => d.estado === 'recusada').length;
+  const emRevisao = decFilt.filter(d => d.estado === 'em_revisao').length;
+  const automaticas = decFilt.filter(d => d.tipo_aprovacao === 'automatica').length;
+  const taxaAuto = total > 0 ? Math.round(automaticas / total * 100) : 0;
+
+  // Tempo médio de decisão
+  let tempos = [];
+  decFilt.forEach(d => {
+    if (!d.data_hora) return;
+    const dtDec = new Date(d.data_hora);
+    // Try to find entry date from pipeline or enc
+    const enc = state.encAutoriz.find(e => String(e.N_Encomenda||'').trim() === String(d.n_encomenda||'').trim());
+    if (enc && enc.DataEncomenda) {
+      const dtEnc = new Date(enc.DataEncomenda);
+      if (!isNaN(dtEnc) && !isNaN(dtDec)) {
+        const diff = (dtDec - dtEnc) / (1000 * 60 * 60); // hours
+        if (diff >= 0 && diff < 720) tempos.push(diff);
+      }
+    }
+  });
+  const tempoMedio = tempos.length > 0 ? (tempos.reduce((a,b)=>a+b,0)/tempos.length).toFixed(1) : null;
+
+  // Top clientes
+  const clienteCounts = {};
+  decFilt.forEach(d => {
+    const k = (d.nif||'') + '|' + (d.nome||'');
+    clienteCounts[k] = (clienteCounts[k]||0) + 1;
+  });
+  const topClientes = Object.entries(clienteCounts)
+    .sort((a,b) => b[1]-a[1]).slice(0,5)
+    .map(([k,v]) => ({ nome: k.split('|')[1]||k.split('|')[0], nif: k.split('|')[0], count: v }));
+
+  // Top vendedores
+  const vendCounts = {};
+  decFilt.forEach(d => {
+    // Find vendedor from pipeline
+    const enc = state.pipeline.find(p => p.n_enc === d.n_encomenda);
+    const vend = enc ? enc.vendedor : (d.vendedor||'');
+    if (vend) vendCounts[vend] = (vendCounts[vend]||0) + 1;
+  });
+  const topVendedores = Object.entries(vendCounts)
+    .sort((a,b) => b[1]-a[1]).slice(0,5)
+    .map(([k,v]) => ({ nome: k, count: v }));
+
+  // Meses disponíveis
+  const meses = [...new Set(dec.map(d => mesFmt(d.data_hora)).filter(Boolean))].sort().reverse();
+
+  return { total, aprovadas, recusadas, emRevisao, automaticas, taxaAuto, tempoMedio, topClientes, topVendedores, meses };
+}
+
 function renderDashboard() {
-  const total = state.pipeline.length;
-  const apr = state.pipeline.filter(e=>e.estado==='aprovada').length;
-  const rec = state.pipeline.filter(e=>e.estado==='recusada').length;
-  const pen = state.pipeline.filter(e=>e.estado==='por_autorizar').length;
-  const totalPend = state.pendentes.reduce((s,r)=>s+(parseFloat((r.Pendente||'0').replace(',','.'))||0),0);
-  const totalVenc = state.pendentes.filter(r=>parseInt(r.Dias_Venc||0)>0).reduce((s,r)=>s+(parseFloat((r.Pendente||'0').replace(',','.'))||0),0);
+  const mesFilter = state.dashMes || null;
+  const d = calcDashboard(mesFilter);
+
+  // Months selector
+  const mesesOpts = d.meses.map(m => `<option value="${m}" ${mesFilter===m?'selected':''}>${m}</option>`).join('');
+
+  // Bar chart helper
+  const maxC = d.topClientes.length > 0 ? Math.max(...d.topClientes.map(c=>c.count)) : 1;
+  const clienteRows = d.topClientes.length === 0
+    ? '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--g400)">Sem dados</td></tr>'
+    : d.topClientes.map((c,i) => `<tr style="background:${i%2===0?'var(--g50)':'#fff'}">
+        <td><a href="#" class="link-analise" data-nif="${c.nif}" style="color:var(--navy);font-weight:600;text-decoration:none">${c.nome||c.nif}</a></td>
+        <td style="font-family:var(--mono);font-size:10px;color:var(--g400)">${c.nif}</td>
+        <td style="width:200px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;background:var(--g200);border-radius:4px;height:8px">
+              <div style="width:${Math.round(c.count/maxC*100)}%;background:var(--navy);height:8px;border-radius:4px"></div>
+            </div>
+            <span style="font-family:var(--mono);font-size:12px;font-weight:600;min-width:20px">${c.count}</span>
+          </div>
+        </td>
+      </tr>`).join('');
+
+  const maxV = d.topVendedores.length > 0 ? Math.max(...d.topVendedores.map(v=>v.count)) : 1;
+  const vendRows = d.topVendedores.length === 0
+    ? '<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--g400)">Sem dados</td></tr>'
+    : d.topVendedores.map((v,i) => `<tr style="background:${i%2===0?'var(--g50)':'#fff'}">
+        <td>${v.nome}</td>
+        <td style="width:200px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;background:var(--g200);border-radius:4px;height:8px">
+              <div style="width:${Math.round(v.count/maxV*100)}%;background:var(--accent);height:8px;border-radius:4px"></div>
+            </div>
+            <span style="font-family:var(--mono);font-size:12px;font-weight:600;min-width:20px">${v.count}</span>
+          </div>
+        </td>
+      </tr>`).join('');
+
+  // Donut chart SVG for aprovadas/recusadas/revisao
+  const total = d.aprovadas + d.recusadas + d.emRevisao || 1;
+  const pApr = d.aprovadas / total;
+  const pRec = d.recusadas / total;
+  const pRev = d.emRevisao / total;
+  const cx = 60, cy = 60, r = 45, stroke = 18;
+  const circ = 2 * Math.PI * r;
+  const dApr = pApr * circ, dRec = pRec * circ, dRev = pRev * circ;
+  const oApr = 0, oRec = -dApr, oRev = -(dApr + dRec);
+  const donut = `<svg width="120" height="120" viewBox="0 0 120 120">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--g200)" stroke-width="${stroke}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#16a34a" stroke-width="${stroke}" stroke-dasharray="${dApr} ${circ}" stroke-dashoffset="${oApr}" transform="rotate(-90 ${cx} ${cy})"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#dc2626" stroke-width="${stroke}" stroke-dasharray="${dRec} ${circ}" stroke-dashoffset="${oRec}" transform="rotate(-90 ${cx} ${cy})"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#3b82f6" stroke-width="${stroke}" stroke-dasharray="${dRev} ${circ}" stroke-dashoffset="${oRev}" transform="rotate(-90 ${cx} ${cy})"/>
+    <text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="16" font-weight="700" fill="var(--navy)" font-family="var(--mono)">${d.total}</text>
+    <text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="9" fill="var(--g400)" font-family="var(--font)">decisões</text>
+  </svg>`;
+
   return `
-  <div class="kpi-row">
-    <div class="kpi"><div class="kpi-lbl">Total Pendente</div><div class="kpi-val" style="font-size:16px">${fmt(totalPend)}</div></div>
-    <div class="kpi"><div class="kpi-lbl">Total Vencido</div><div class="kpi-val red" style="font-size:16px">${fmt(totalVenc)}</div></div>
-    <div class="kpi"><div class="kpi-lbl">Encomendas Pipeline</div><div class="kpi-val">${total}</div></div>
-    <div class="kpi"><div class="kpi-lbl">Por Autorizar</div><div class="kpi-val amber">${pen}</div></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="font-size:13px;font-weight:700;color:var(--navy)">Dashboard de Aprovações</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <label style="font-size:11px;color:var(--g600)">Período:</label>
+      <select id="dash-mes" style="padding:6px 10px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:12px;outline:none">
+        <option value="">Todos os períodos</option>
+        ${mesesOpts}
+      </select>
+    </div>
   </div>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-lbl">Total Decisões</div><div class="kpi-val">${d.total}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Taxa Aprovação Auto</div><div class="kpi-val green">${d.taxaAuto}%</div><div class="kpi-sub">${d.automaticas} de ${d.total}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Tempo Médio Decisão</div><div class="kpi-val blue">${d.tempoMedio !== null ? d.tempoMedio + 'h' : '—'}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Recusadas</div><div class="kpi-val red">${d.recusadas}</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Distribuição de Decisões</span></div>
+      <div style="padding:16px;display:flex;align-items:center;gap:24px">
+        ${donut}
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:12px;height:12px;border-radius:50%;background:#16a34a;flex-shrink:0"></div>
+            <span style="font-size:12px">Aprovadas</span>
+            <span style="font-family:var(--mono);font-size:13px;font-weight:700;margin-left:auto;padding-left:16px">${d.aprovadas}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:12px;height:12px;border-radius:50%;background:#dc2626;flex-shrink:0"></div>
+            <span style="font-size:12px">Recusadas</span>
+            <span style="font-family:var(--mono);font-size:13px;font-weight:700;margin-left:auto;padding-left:16px">${d.recusadas}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:12px;height:12px;border-radius:50%;background:#3b82f6;flex-shrink:0"></div>
+            <span style="font-size:12px">Em Revisão</span>
+            <span style="font-family:var(--mono);font-size:13px;font-weight:700;margin-left:auto;padding-left:16px">${d.emRevisao}</span>
+          </div>
+          <div style="border-top:1px solid var(--g200);padding-top:8px;margin-top:4px;display:flex;align-items:center;gap:8px">
+            <div style="width:12px;height:12px;border-radius:50%;background:var(--g300);flex-shrink:0"></div>
+            <span style="font-size:12px">Automáticas</span>
+            <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green);margin-left:auto;padding-left:16px">${d.automaticas}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Top Vendedores</span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Vendedor</th><th class="r">Volume</th></tr></thead>
+          <tbody>${vendRows}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
-    <div class="card-hd"><span class="card-title">Dashboard</span></div>
-    <div style="padding:40px;text-align:center;color:var(--g400)">
-      <div style="font-size:32px;margin-bottom:8px">📊</div>
-      <div>Indicadores históricos disponíveis na Fase 6.</div>
+    <div class="card-hd"><span class="card-title">Top Clientes por Volume de Encomendas</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Cliente</th><th>NIF</th><th>Volume</th></tr></thead>
+        <tbody>${clienteRows}</tbody>
+      </table>
     </div>
   </div>`;
 }
@@ -1394,6 +1560,12 @@ function updateEstado(enc, novoEstado) {
 }
 
 // Global event delegation for dynamically rendered buttons
+document.addEventListener('change', function(ev) {
+  if (ev.target.id === 'dash-mes') {
+    state.dashMes = ev.target.value || null; render();
+  }
+});
+
 document.addEventListener('click', async function(ev) {
   // Toggle modo teste
   if (ev.target.closest('#toggle-modo-teste')) {
@@ -1414,6 +1586,10 @@ document.addEventListener('click', async function(ev) {
     const saved = document.getElementById('cfg-email-saved');
     if (saved){ saved.style.display='inline'; setTimeout(()=>{ saved.style.display='none'; },2000); }
     return;
+  }
+  // Dashboard month filter
+  if (ev.target.id === 'dash-mes') {
+    state.dashMes = ev.target.value || null; render(); return;
   }
   const btn = ev.target.closest('#btn-save-dcc-config');
   if (!btn) return;
