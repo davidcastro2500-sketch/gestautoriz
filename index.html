@@ -222,10 +222,19 @@ async function writeDecisao(payload) {
   try {
     const r = await fetch(DECISOES_SCRIPT_URL, {
       method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ ...payload, token: 'JPOWER2026' })
     });
-    const data = await r.json();
-    return data.ok;
+    const txt = await r.text();
+    try {
+      const data = JSON.parse(txt);
+      console.log('writeDecisao response:', data);
+      return data.ok;
+    } catch(e2) {
+      console.log('writeDecisao raw:', txt);
+      return txt.includes('"ok":true');
+    }
   } catch(e) {
     console.error('Erro ao escrever decisao:', e);
     return false;
