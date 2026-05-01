@@ -1169,7 +1169,7 @@ function attachEvents() {
       if(action==='analise'){ state.tab='analise'; state.nifAnalise=nif; state.analiseData=calcAnalise(nif); render(); }
       else if(action==='aprovar'){
         updateEstado(enc,'aprovada');
-        writeDecisao({action:'decisao',n_encomenda:enc,empresa,nif,nome,valor,estado:'aprovada',tipo_aprovacao:'manual',utilizador:state.user.name});
+        writeDecisao({action:'decisao',n_encomenda:enc,empresa,nif,nome,valor,estado:'aprovada',tipo_aprovacao:'manual',utilizador:state.user.name,vendedor_email:getVendedorEmail(state.pipeline.find(p=>p.n_enc===enc)),email_phc:state.emailConfig.emailPHC,email_dcc:state.emailConfig.emailDCC,email_adm:state.emailConfig.emailADM,email_teste:state.emailConfig.emailTeste,modo_teste:state.emailConfig.modoTeste});
       }
       else if(action==='recusar'){ state.modal={type:'recusar',enc,nif,nome,empresa,valor}; render(); }
       else if(action==='revisao'){ state.modal={type:'revisao',enc,nif,nome,empresa,valor,vendedor,ronda:1}; render(); }
@@ -1191,7 +1191,7 @@ function attachEvents() {
         const textarea=document.getElementById('resp-'+enc);
         const resposta=(textarea||{}).value||'';
         if(!resposta.trim()){ alert('Escreve a resposta antes de submeter.'); return; }
-        writeDecisao({action:'revisao_resposta',n_encomenda:enc,resposta,utilizador:state.user.name});
+        writeDecisao({action:'revisao_resposta',n_encomenda:enc,resposta,utilizador:state.user.name,email_adm:state.emailConfig.emailADM,email_teste:state.emailConfig.emailTeste,modo_teste:state.emailConfig.modoTeste});
         const rev=state.pipeline.find(p=>p.n_enc===enc);
         if(rev){ if(!rev.revisao) rev.revisao={}; if(!rev.revisao.resposta_1){ rev.revisao.resposta_1=resposta; rev.revisao.data_r1=new Date().toLocaleString('pt-PT'); } else { rev.revisao.resposta_2=resposta; rev.revisao.data_r2=new Date().toLocaleString('pt-PT'); } rev.revisao.estado='respondida'; }
         render();
@@ -1288,7 +1288,7 @@ function attachEvents() {
         const e=state.pipeline.find(p=>p.n_enc===enc_sel);
         if(!e) return;
         updateEstado(enc_sel,'recusada');
-        return writeDecisao({action:'decisao',n_encomenda:enc_sel,empresa:e.empresa,nif:e.nif,nome:e.nome,valor:String(e.valor),estado:'recusada',tipo_aprovacao:'manual',utilizador:state.user.name,motivo_recusa:motivo});
+        return writeDecisao({action:'decisao',n_encomenda:enc_sel,empresa:e.empresa,nif:e.nif,nome:e.nome,valor:String(e.valor),estado:'recusada',tipo_aprovacao:'manual',utilizador:state.user.name,motivo_recusa:motivo,vendedor_email:getVendedorEmail(e),email_phc:state.emailConfig.emailPHC,email_dcc:state.emailConfig.emailDCC,email_adm:state.emailConfig.emailADM,email_teste:state.emailConfig.emailTeste,modo_teste:state.emailConfig.modoTeste});
       });
       await Promise.all(promises);
       state.modal=null; render();
@@ -1297,19 +1297,19 @@ function attachEvents() {
     if(m.type==='aprovar'){
       const comentario=($('m-comentario')||{}).value||'';
       updateEstado(m.enc,'aprovada');
-      writeDecisao({action:'decisao',n_encomenda:m.enc,empresa:m.empresa||'',nif:m.nif||'',nome:m.nome||'',valor:m.valor||'',estado:'aprovada',tipo_aprovacao:'manual',utilizador:state.user.name,motivo_recusa:comentario});
+      writeDecisao({action:'decisao',n_encomenda:m.enc,empresa:m.empresa||'',nif:m.nif||'',nome:m.nome||'',valor:m.valor||'',estado:'aprovada',tipo_aprovacao:'manual',utilizador:state.user.name,motivo_recusa:comentario,vendedor_email:getVendedorEmail(state.pipeline.find(p=>p.n_enc===m.enc)),email_phc:state.emailConfig.emailPHC,email_dcc:state.emailConfig.emailDCC,email_adm:state.emailConfig.emailADM,email_teste:state.emailConfig.emailTeste,modo_teste:state.emailConfig.modoTeste});
     } else if(m.type==='recusar'){
       const motivo=($('m-motivo')||{}).value||'';
       if(!motivo.trim()){ alert('O motivo é obrigatório.'); return; }
       updateEstado(m.enc,'recusada');
-      writeDecisao({action:'decisao',n_encomenda:m.enc,empresa:m.empresa||'',nif:m.nif||'',nome:m.nome||'',valor:m.valor||'',estado:'recusada',tipo_aprovacao:'manual',utilizador:state.user.name,motivo_recusa:motivo});
+      writeDecisao({action:'decisao',n_encomenda:m.enc,empresa:m.empresa||'',nif:m.nif||'',nome:m.nome||'',valor:m.valor||'',estado:'recusada',tipo_aprovacao:'manual',utilizador:state.user.name,motivo_recusa:motivo,vendedor_email:getVendedorEmail(state.pipeline.find(p=>p.n_enc===m.enc)),email_phc:state.emailConfig.emailPHC,email_dcc:state.emailConfig.emailDCC,email_adm:state.emailConfig.emailADM,email_teste:state.emailConfig.emailTeste,modo_teste:state.emailConfig.modoTeste});
     } else if(m.type==='revisao'){
       const questao=($('m-questao')||{}).value||'';
       if(!questao.trim()){ alert('Escreve a questão antes de enviar.'); return; }
       updateEstado(m.enc,'em_revisao');
       const enc=state.pipeline.find(p=>p.n_enc===m.enc);
       if(enc){ if(!enc.revisao) enc.revisao={}; if(!enc.revisao.questao_1){ enc.revisao.questao_1=questao; enc.revisao.data_q1=new Date().toLocaleString('pt-PT'); } else { enc.revisao.questao_2=questao; enc.revisao.data_q2=new Date().toLocaleString('pt-PT'); } enc.revisao.estado='pendente'; }
-      writeDecisao({action:'revisao_questao',n_encomenda:m.enc,nif:m.nif||'',nome:m.nome||'',empresa:m.empresa||'',valor:m.valor||'',vendedor:m.vendedor||'',questao,utilizador:state.user.name});
+      writeDecisao({action:'revisao_questao',n_encomenda:m.enc,nif:m.nif||'',nome:m.nome||'',empresa:m.empresa||'',valor:m.valor||'',vendedor:m.vendedor||'',questao,utilizador:state.user.name,email_dcc:state.emailConfig.emailDCC,email_teste:state.emailConfig.emailTeste,modo_teste:state.emailConfig.modoTeste});
       writeDecisao({action:'decisao',n_encomenda:m.enc,empresa:m.empresa||'',nif:m.nif||'',nome:m.nome||'',valor:m.valor||'',estado:'em_revisao',tipo_aprovacao:'manual',utilizador:state.user.name});
     }
     state.modal=null; render();
@@ -1339,7 +1339,7 @@ function attachEvents() {
         const e=state.pipeline.find(p=>p.n_enc===enc_sel);
         if(!e) return;
         updateEstado(enc_sel,'aprovada');
-        return writeDecisao({action:'decisao',n_encomenda:enc_sel,empresa:e.empresa,nif:e.nif,nome:e.nome,valor:String(e.valor),estado:'aprovada',tipo_aprovacao:'manual',utilizador:state.user.name,motivo_recusa:''});
+        return writeDecisao({action:'decisao',n_encomenda:enc_sel,empresa:e.empresa,nif:e.nif,nome:e.nome,valor:String(e.valor),estado:'aprovada',tipo_aprovacao:'manual',utilizador:state.user.name,motivo_recusa:'',vendedor_email:getVendedorEmail(e),email_phc:state.emailConfig.emailPHC,email_dcc:state.emailConfig.emailDCC,email_adm:state.emailConfig.emailADM,email_teste:state.emailConfig.emailTeste,modo_teste:state.emailConfig.modoTeste});
       });
       await Promise.all(promises);
       alert(selected.length+' encomenda(s) aprovada(s).');
