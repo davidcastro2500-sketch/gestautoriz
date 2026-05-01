@@ -244,7 +244,10 @@ async function writeDecisao(payload) {
 }
 
 async function loadAllData() {
-  state.loading = true; state.loadErr = null; render();
+  state.loading = true; state.loadErr = null;
+  const ind = document.getElementById('refresh-indicator');
+  if (ind) { ind.style.opacity = '1'; }
+  render();
   try {
     const [pend, plaf, encA, encF, vend] = await Promise.all([
       loadSheet('Pendentes'), loadSheet('Plafond'),
@@ -264,7 +267,10 @@ async function loadAllData() {
     state.loadErr = e.message;
     console.error(e);
   }
-  state.loading = false; render();
+  state.loading = false;
+  const ind2 = document.getElementById('refresh-indicator');
+  if (ind2) { ind2.style.opacity = '0'; }
+  render();
 }
 
 function getVendedorEmail(enc) {
@@ -502,6 +508,7 @@ function renderApp() {
         <span style="font-size:11px;color:#93c5fd">Gestão de Aprovações</span>
       </div>
       <div class="tb-right">
+        <span id="refresh-indicator" style="font-size:10px;color:#93c5fd;opacity:0;transition:opacity .3s">↻</span>
         <span class="tb-badge">${state.user.role}</span>
         <span class="tb-user">${state.user.name}</span>
         <button class="tb-logout" id="btn-logout">Sair</button>
@@ -1277,13 +1284,13 @@ function attachEvents() {
     const email=($('l-email')||{}).value.trim().toLowerCase();
     const pass=($('l-pass')||{}).value;
     const u=USERS[email];
-    if(u&&u.password===pass){ state.user={email,role:u.role,name:u.name}; state.tab='pipeline'; loadAllData(); }
+    if(u&&u.password===pass){ state.user={email,role:u.role,name:u.name}; state.tab='pipeline'; loadAllData(); startAutoRefresh(); }
     else { ($('l-err')||{}).textContent='Credenciais inválidas.'; }
   };
   ['l-email','l-pass'].forEach(id=>{ const el=$(id); if(el) el.onkeydown=e=>{ if(e.key==='Enter') lBtn&&lBtn.click(); }; });
 
   const lo=$('btn-logout');
-  if(lo) lo.onclick=()=>{ state.user=null; state.dataLoaded=false; state.pipeline=[]; render(); };
+  if(lo) lo.onclick=()=>{ state.user=null; state.dataLoaded=false; state.pipeline=[]; if(autoRefreshTimer) clearInterval(autoRefreshTimer); render(); };
 
   const retry=$('btn-retry');
   if(retry) retry.onclick=()=>loadAllData();
@@ -1557,6 +1564,17 @@ function attachEvents() {
 function updateEstado(enc, novoEstado) {
   const e=state.pipeline.find(p=>p.n_enc===enc);
   if(e){ e.estado=novoEstado; render(); }
+}
+
+// Auto-refresh every 30 seconds
+let autoRefreshTimer = null;
+function startAutoRefresh() {
+  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+  autoRefreshTimer = setInterval(async () => {
+    if (state.user && state.dataLoaded && !state.loading) {
+      await loadAllData();
+    }
+  }, 30000);
 }
 
 // Global event delegation for dynamically rendered buttons
