@@ -554,6 +554,9 @@ function renderPipeline() {
               ${isDCC && e.estado==='por_autorizar' && dccPodeAprovar(e) ? `
                 <button class="btn btn-sm btn-success" data-action="aprovar" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}" title="Aprovação DCC">✓ DCC</button>
               ` : ''}
+              ${isDCC && e.estado==='por_autorizar' ? `
+                <button class="btn btn-sm btn-danger" data-action="recusar" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}">✗</button>
+              ` : ''}
               ${!isDCC && e.estado==='por_autorizar' ? `
                 <button class="btn btn-sm btn-success" data-action="aprovar" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}">✓</button>
                 <button class="btn btn-sm btn-danger" data-action="recusar" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}">✗</button>
@@ -1329,12 +1332,14 @@ function attachEvents() {
   if(tog) tog.onclick=()=>tog.classList.toggle('on');
 
   const btnSaveDcc=$('btn-save-dcc-config');
-  if(btnSaveDcc) btnSaveDcc.onclick=()=>{
+  if(btnSaveDcc) btnSaveDcc.onclick=async ()=>{
     const valor=parseFloat(($('cfg-dcc-valor')||{}).value||3500);
     const dias=parseInt(($('cfg-dcc-dias')||{}).value||3);
     if(isNaN(valor)||isNaN(dias)){ alert('Valores inválidos.'); return; }
     state.dccConfig.limiteValor=valor;
     state.dccConfig.limiteDias=dias;
+    // Save to Sheets
+    await writeDecisao({action:'saveConfig',limiteValor:valor,limiteDias:dias,utilizador:state.user.name});
     const saved=$('cfg-dcc-saved');
     if(saved){ saved.style.display='inline'; setTimeout(()=>{ saved.style.display='none'; },2000); }
   };
