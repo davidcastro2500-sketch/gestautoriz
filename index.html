@@ -157,6 +157,7 @@ let state = {
   nifAnalise:'', analiseData:null, searchResults:null,
   decisoes:[], revisoes:[], decisoesLoaded:false, antigFilter:null,
   dccConfig: { limiteValor: 3500, limiteDias: 3 },
+  emailConfig: { emailPHC: '', emailTeste: '', modoTeste: 'NAO', emailADM: 'adm@jpower.pt', emailDCC: 'dcc@jpower.pt' },
   modal:null, pipeline:[]
 };
 
@@ -263,6 +264,14 @@ async function loadAllData() {
     console.error(e);
   }
   state.loading = false; render();
+}
+
+function getVendedorEmail(enc) {
+  if (!enc) return '';
+  const vend = state.vendedores.find(v => (v.Vendedor||Object.values(v)[0]||'').trim() === enc.vendedor.trim());
+  if (!vend) return state.emailConfig.emailTeste || '';
+  const email = vend.email || Object.values(vend)[1] || '';
+  return email || state.emailConfig.emailTeste || '';
 }
 
 function empNome(cod) {
@@ -967,6 +976,29 @@ function renderConfig() {
         </div>
       </div>
       <div class="cfg-section">
+        <div class="cfg-section-title">Configurações de Email</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:5px">Email Responsável PHC</label>
+            <input id="cfg-email-phc" type="email" value="${state.emailConfig.emailPHC}"
+              style="width:100%;padding:8px 12px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:13px;outline:none">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:5px">Email de Teste</label>
+            <input id="cfg-email-teste" type="email" value="${state.emailConfig.emailTeste}"
+              style="width:100%;padding:8px 12px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:13px;outline:none">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--g600)">Modo Teste (envia todos os emails para o email de teste):</label>
+          <div class="toggle ${state.emailConfig.modoTeste==='SIM'?'on':''}" id="toggle-modo-teste"></div>
+        </div>
+        <div>
+          <button class="btn btn-primary btn-sm" id="btn-save-email-config">Guardar configurações email</button>
+          <span id="cfg-email-saved" style="font-size:12px;color:var(--green);margin-left:10px;display:none">✓ Guardado</span>
+        </div>
+      </div>
+      <div class="cfg-section">
         <div class="cfg-section-title">Vendedores (${state.vendedores.length})</div>
         <table>
           <thead><tr><th>Nome</th><th>Email</th></tr></thead>
@@ -1363,6 +1395,26 @@ function updateEstado(enc, novoEstado) {
 
 // Global event delegation for dynamically rendered buttons
 document.addEventListener('click', async function(ev) {
+  // Toggle modo teste
+  if (ev.target.closest('#toggle-modo-teste')) {
+    state.emailConfig.modoTeste = state.emailConfig.modoTeste === 'SIM' ? 'NAO' : 'SIM';
+    render(); return;
+  }
+  // Save email config
+  if (ev.target.closest('#btn-save-email-config')) {
+    const phc = (document.getElementById('cfg-email-phc')||{}).value||'';
+    const teste = (document.getElementById('cfg-email-teste')||{}).value||'';
+    state.emailConfig.emailPHC = phc;
+    state.emailConfig.emailTeste = teste;
+    await writeDecisao({action:'saveConfig',
+      emailPHC: phc, emailTeste: teste,
+      modoTeste: state.emailConfig.modoTeste,
+      utilizador: state.user ? state.user.name : ''
+    });
+    const saved = document.getElementById('cfg-email-saved');
+    if (saved){ saved.style.display='inline'; setTimeout(()=>{ saved.style.display='none'; },2000); }
+    return;
+  }
   const btn = ev.target.closest('#btn-save-dcc-config');
   if (!btn) return;
   const valor = parseFloat((document.getElementById('cfg-dcc-valor')||{}).value||3500);
