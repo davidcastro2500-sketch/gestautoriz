@@ -156,6 +156,7 @@ let state = {
   loading:false, dataLoaded:false, loadErr:null,
   nifAnalise:'', analiseData:null, searchResults:null,
   decisoes:[], revisoes:[], decisoesLoaded:false, antigFilter:null,
+  dccConfig: { limiteValor: 3500, limiteDias: 3 },
   modal:null, pipeline:[]
 };
 
@@ -280,6 +281,28 @@ function mergePipelineStates() {
     if (e.estado === 'em_revisao') {
       }
   });
+}
+
+function dccPodeAprovar(enc) {
+  // Check DCC approval conditions for a pipeline entry
+  const a = calcAnalise(enc.nif);
+  const limiteValor = state.dccConfig.limiteValor;
+  const limiteDias = state.dccConfig.limiteDias;
+  
+  // Condition 1: PlafondSeguro > PlafondNecessario
+  if (a.totais.plafSeg <= a.totais.plafNec) return false;
+  
+  // Condition 2: PlafondNecessario <= limite configurado
+  if (a.totais.plafNec > limiteValor) return false;
+  
+  // Condition 3: Sem facturas vencidas acima do limite de dias
+  const temVencidas = state.pendentes.filter(r =>
+    (r.NIF||'').trim() === enc.nif.trim() &&
+    parseInt(r.Dias_Venc||0) > limiteDias
+  ).length > 0;
+  if (temVencidas) return false;
+  
+  return true;
 }
 
 function buildPipeline(encA) {
@@ -528,6 +551,9 @@ function renderPipeline() {
           <td>
             <div class="act-btns">
               <button class="btn btn-sm btn-ghost" data-action="analise" data-nif="${e.nif}">Ver</button>
+              ${isDCC && e.estado==='por_autorizar' && dccPodeAprovar(e) ? `
+                <button class="btn btn-sm btn-success" data-action="aprovar" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}" title="Aprovação DCC">✓ DCC</button>
+              ` : ''}
               ${!isDCC && e.estado==='por_autorizar' ? `
                 <button class="btn btn-sm btn-success" data-action="aprovar" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}">✓</button>
                 <button class="btn btn-sm btn-danger" data-action="recusar" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}">✗</button>
@@ -893,13 +919,39 @@ function renderConfig() {
         </table>
       </div>
       <div class="cfg-section">
-        <div class="cfg-section-title">Regras de Aprovação Automática</div>
+        <div class="cfg-section-title">Regras de Aprovação Automática (Sistema)</div>
         <div class="rule-row">
           <div>
-            <div class="rule-name">Regra Principal</div>
-            <div class="rule-desc">Plafond Necessário &lt; Plafond Aprovado E sem facturas vencidas há mais de 3 dias (consolidado grupo)</div>
+            <div class="rule-name">Regra Principal — ADM</div>
+            <div class="rule-desc">Plafond Necessário &lt; Plafond Aprovado — sem restrições adicionais</div>
           </div>
           <div class="toggle on" id="toggle-regra"></div>
+        </div>
+      </div>
+      <div class="cfg-section">
+        <div class="cfg-section-title">Limites de Aprovação DCC</div>
+        <div style="font-size:12px;color:var(--g600);margin-bottom:12px">O DCC pode aprovar quando: Plafond Seguro &gt; Plafond Necessário E Plafond Necessário ≤ limite abaixo E sem facturas vencidas acima do limite de dias.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:5px">Plafond Necessário máximo (€)</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="cfg-dcc-valor" type="number" value="${state.dccConfig.limiteValor}" min="0" step="100"
+                style="padding:8px 12px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:14px;width:140px;outline:none">
+              <span style="font-size:12px;color:var(--g400)">€</span>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:5px">Dias vencidos máximos</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="cfg-dcc-dias" type="number" value="${state.dccConfig.limiteDias}" min="0" step="1"
+                style="padding:8px 12px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:14px;width:100px;outline:none">
+              <span style="font-size:12px;color:var(--g400)">dias</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <button class="btn btn-primary btn-sm" id="btn-save-dcc-config">Guardar limites</button>
+          <span id="cfg-dcc-saved" style="font-size:12px;color:var(--green);margin-left:10px;display:none">✓ Guardado</span>
         </div>
       </div>
       <div class="cfg-section">
@@ -1275,6 +1327,17 @@ function attachEvents() {
 
   const tog=$('toggle-regra');
   if(tog) tog.onclick=()=>tog.classList.toggle('on');
+
+  const btnSaveDcc=$('btn-save-dcc-config');
+  if(btnSaveDcc) btnSaveDcc.onclick=()=>{
+    const valor=parseFloat(($('cfg-dcc-valor')||{}).value||3500);
+    const dias=parseInt(($('cfg-dcc-dias')||{}).value||3);
+    if(isNaN(valor)||isNaN(dias)){ alert('Valores inválidos.'); return; }
+    state.dccConfig.limiteValor=valor;
+    state.dccConfig.limiteDias=dias;
+    const saved=$('cfg-dcc-saved');
+    if(saved){ saved.style.display='inline'; setTimeout(()=>{ saved.style.display='none'; },2000); }
+  };
 }
 
 function updateEstado(enc, novoEstado) {
