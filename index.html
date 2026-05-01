@@ -208,9 +208,6 @@ async function loadDecisoesData() {
     const txt2 = await r2.text();
     state.revisoes = parseCSV(txt2);
     
-    const emRevisao = state.decisoes.filter(d => (d.estado||'').trim() === 'em_revisao');
-    console.log('Em revisao:', emRevisao.length, emRevisao.map(d => d.n_encomenda));
-    
     state.decisoesLoaded = true;
   } catch(e) {
     console.warn('Decisoes nao carregadas:', e);
@@ -1186,7 +1183,7 @@ function attachEvents() {
   const mCancel=$('m-cancel');
   if(mCancel) mCancel.onclick=()=>{ state.modal=null; render(); };
   const mConfirm=$('m-confirm');
-  if(mConfirm) mConfirm.onclick=()=>{
+  if(mConfirm) mConfirm.onclick=async ()=>{
     const m=state.modal;
     if(m.type==='recusar_batch'){
       const motivo=($('m-motivo')||{}).value||'';
