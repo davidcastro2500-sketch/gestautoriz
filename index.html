@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GestAutoriz — Grupo AJ</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0f2240;--navy-mid:#1e3a5f;--navy-light:#2d5a8e;
+  --accent:#3b82f6;--accent-soft:#dbeafe;
+  --green:#16a34a;--green-soft:#dcfce7;
+  --red:#dc2626;--red-soft:#fee2e2;
+  --amber:#d97706;--amber-soft:#fef3c7;
+  --g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g300:#cbd5e1;
+  --g400:#94a3b8;--g600:#475569;--g800:#1e293b;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --r:8px;--sh:0 1px 3px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--g100);color:var(--g800);font-size:14px;min-height:100vh}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%)}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-brand{font-size:22px;font-weight:700;color:var(--navy);letter-spacing:-.5px}
+.login-brand span{color:var(--accent)}
+.login-sub{font-size:11px;color:var(--g400);margin-top:3px;letter-spacing:.06em;text-transform:uppercase}
+.lf{margin-bottom:14px}
+.lf label{display:block;font-size:11px;font-weight:700;color:var(--g600);margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase}
+.lf input{width:100%;padding:10px 14px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:14px;outline:none;transition:border-color .2s}
+.lf input:focus{border-color:var(--accent)}
+.login-btn{width:100%;padding:12px;background:var(--navy);color:#fff;border:none;border-radius:var(--r);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;transition:background .2s}
+.login-btn:hover{background:var(--navy-light)}
+.login-err{color:var(--red);font-size:12px;text-align:center;margin-top:10px;min-height:18px}
+.app{display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--navy);color:#fff;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0;position:sticky;top:0;z-index:100}
+.tb-left{display:flex;align-items:center;gap:8px}
+.tb-brand{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.tb-brand span{color:var(--accent)}
+.tb-divider{width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-user{font-size:12px;color:#93c5fd}
+.tb-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.12);color:#93c5fd;text-transform:uppercase;letter-spacing:.05em}
+.tb-logout{font-size:12px;color:#93c5fd;background:none;border:1px solid rgba(255,255,255,.2);padding:4px 12px;border-radius:20px;cursor:pointer;font-family:var(--font);transition:all .2s}
+.tb-logout:hover{background:rgba(255,255,255,.1)}
+.nav{background:#fff;border-bottom:1px solid var(--g200);padding:0 20px;display:flex;overflow-x:auto;flex-shrink:0;position:sticky;top:52px;z-index:99}
+.nav-tab{padding:14px 16px;font-size:13px;font-weight:500;color:var(--g400);border-bottom:2.5px solid transparent;cursor:pointer;white-space:nowrap;transition:all .15s;user-select:none;display:flex;align-items:center;gap:6px}
+.nav-tab:hover{color:var(--g800)}
+.nav-tab.active{color:var(--navy);border-bottom-color:var(--navy);font-weight:600}
+.n-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;border-radius:10px;min-width:18px;height:18px;padding:0 5px;display:inline-flex;align-items:center;justify-content:center}
+.content{flex:1;padding:20px;overflow-y:auto}
+.card{background:#fff;border-radius:var(--r);border:1px solid var(--g200);box-shadow:var(--sh);margin-bottom:14px}
+.card-hd{padding:12px 16px;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:12px;font-weight:700;color:var(--navy);letter-spacing:.05em;text-transform:uppercase}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--g200);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh)}
+.kpi-lbl{font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.kpi-val{font-size:20px;font-weight:700;color:var(--navy);font-family:var(--mono)}
+.kpi-val.red{color:var(--red)}.kpi-val.green{color:var(--green)}.kpi-val.amber{color:var(--amber)}
+.kpi-val.blue{color:var(--accent)}
+.kpi-sub{font-size:11px;color:var(--g400);margin-top:2px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:600;font-size:10px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+thead th.r{text-align:right}
+tbody td{padding:8px 12px;border-bottom:1px solid var(--g100);white-space:nowrap}
+tbody td.r{text-align:right;font-family:var(--mono)}
+tbody tr:hover td{background:var(--g50)}
+tbody tr:last-child td{border-bottom:none}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.b-pending{background:var(--amber-soft);color:var(--amber)}
+.b-approved{background:var(--green-soft);color:var(--green)}
+.b-refused{background:var(--red-soft);color:var(--red)}
+.b-review{background:var(--accent-soft);color:var(--accent)}
+.b-phc{background:#d1fae5;color:#065f46}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:6px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--navy);color:#fff}.btn-primary:hover{background:var(--navy-light)}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#15803d}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#b91c1c}
+.btn-ghost{background:var(--g100);color:var(--g600)}.btn-ghost:hover{background:var(--g200)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:#2563eb}
+.btn-sm{padding:4px 10px;font-size:11px}
+.loading{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--g400);gap:10px;flex-direction:column}
+.spinner{width:28px;height:28px;border:3px solid var(--g200);border-top-color:var(--navy);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px;color:var(--g400)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal{background:#fff;border-radius:12px;padding:24px;width:480px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:16px}
+.modal-field{margin-bottom:12px}
+.modal-field label{display:block;font-size:11px;font-weight:700;color:var(--g600);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.modal-field textarea,.modal-field select,.modal-field input{width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:13px;outline:none;transition:border-color .2s;resize:vertical}
+.modal-field textarea:focus,.modal-field select:focus,.modal-field input:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.analise-hd{background:var(--navy);color:#fff;padding:12px 16px;border-radius:var(--r) var(--r) 0 0;display:flex;align-items:center;justify-content:space-between}
+.analise-meta{background:#fff;border:1px solid var(--g200);border-top:none;padding:12px 16px;display:grid;grid-template-columns:130px 1fr 160px 180px;gap:8px 20px}
+.m-lbl{font-size:10px;color:var(--g400);text-transform:uppercase;letter-spacing:.05em}
+.m-val{font-size:12px;font-weight:600;color:var(--g800);margin-top:1px}
+.m-val.cliente{font-size:15px;color:var(--navy)}
+.m-val.small{font-size:11px;color:var(--g400);font-weight:400}
+.sec-bar{background:var(--navy-mid);color:#fff;font-size:11px;font-weight:600;padding:6px 16px;text-transform:uppercase;letter-spacing:.06em;border-top:2px solid var(--g200)}
+.exp-wrap{overflow-x:auto;border:1px solid var(--g200);border-top:none}
+.exp-tbl thead th{background:var(--navy-mid)}
+.exp-tbl thead th.rh{background:#9b1c1c}
+.exp-tbl td.red{color:var(--red);font-weight:600}
+.exp-tbl tr.tot td{background:#e8edf5;font-weight:600;border-top:2px solid var(--navy-mid)}
+.venc-row{background:#fff;border:1px solid var(--g200);border-top:none;padding:7px 16px;display:flex;justify-content:flex-end;align-items:center;gap:10px}
+.venc-pill{background:var(--red-soft);color:var(--red);font-size:13px;font-weight:700;padding:4px 14px;border-radius:6px;font-family:var(--mono)}
+.obs-box{background:#fff;border:1px solid var(--g200);border-top:none;min-height:38px;padding:8px 16px;font-size:12px;color:var(--g600);font-style:italic}
+.det-wrap{overflow-x:auto;border:1px solid var(--g200);border-top:none}
+.det-tbl thead th{background:var(--navy-light);font-size:10px;padding:6px 10px}
+.det-tbl td{font-size:11px;padding:5px 10px}
+.vp{background:var(--red);color:#fff;font-weight:700;border-radius:3px;padding:1px 5px}
+.nif-bar{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.nif-input{padding:9px 14px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--mono);font-size:14px;width:200px;outline:none;transition:border-color .2s}
+.nif-input:focus{border-color:var(--accent)}
+.act-btns{display:flex;gap:4px}
+.cfg-section{margin-bottom:20px}
+.cfg-section-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--g200)}
+.rule-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--g50);border-radius:6px;margin-bottom:6px;border:1px solid var(--g200)}
+.rule-name{font-size:13px;font-weight:500}
+.rule-desc{font-size:11px;color:var(--g400);margin-top:2px}
+.toggle{width:36px;height:20px;background:var(--g300);border-radius:10px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{left:18px}
+.err-box{background:var(--red-soft);color:var(--red);border:1px solid #fca5a5;border-radius:var(--r);padding:12px 16px;margin-bottom:14px;font-size:13px}
+@media print {
+  .topbar, .nav, .nif-bar, [id^="btn-"], .act-btns, .btn { display: none !important; }
+  body { background: white; }
+  .content { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const SHEET_ID = '14x_SIrv0rS54yKLkdq-34-dZ9ecRqiLr-rM4QmUq7VY';
+const DECISOES_ID = '1M_nYJWtPCn1r11B3HCUcmB-6NklBleKRSfug7MHNufw';
+const DECISOES_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-dyUwA2BSB6NV8IRtuAV5Mwbj8zGVWuEkM735-20VwGaYdiwrxcFHKDK5jrpa1kVP/exec';
+const USERS = {
+  'adm@jpower.pt': { password: 'jpower2026', role: 'ADM', name: 'David Castro' },
+  'dcc@jpower.pt': { password: 'dcc2026', role: 'DCC', name: 'Dep. Cobranças' }
+};
+const EMPRESAS_FIXAS = {
+  '001':'SGPS','002':'Auto Julio, SA','003':'AJ Leiria','004':'AJ Soluções',
+  '006':'AJ Rent','007':'AJ Imobiliária','008':'AJ Tec','009':'G Caldas',
+  '010':'AJ Ocasião','011':'AJ Mediação','012':'JPower','013':'AJ II',
+  '014':'Alferpac','017':'Fortclima','701':'BForce','703':'Nobreoeste'
+};
+const EMPRESAS_LISTA = Object.values(EMPRESAS_FIXAS);
+
+let state = {
+  user:null, tab:'pipeline',
+  pendentes:[], plafond:[], encAutoriz:[], encFaturar:[], vendedores:[],
+  loading:false, dataLoaded:false, loadErr:null,
+  nifAnalise:'', analiseData:null, searchResults:null,
+  decisoes:[], revisoes:[], decisoesLoaded:false, antigFilter:null,
+  modal:null, pipeline:[]
+};
+
+// ── SHEETS ──────────────────────────────────────────────────────────────────
+async function loadSheet(name) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}&t=${Date.now()}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status} ao carregar ${name}`);
+  const txt = await r.text();
+  if (txt.includes('signin') || txt.includes('ServiceLogin')) throw new Error(`Sem acesso à folha ${name}`);
+  return parseCSV(txt);
+}
+
+function parseCSV(txt) {
+  const lines = txt.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().replace(/[\r\n\u00a0\ufeff]/g,''));
+  const validHeaders = headers.filter(h => h.length > 0);
+  return lines.slice(1).map(l => {
+    const vals = parseCSVLine(l);
+    const obj = {};
+    headers.forEach((h,i) => {
+      if (h) obj[h] = (vals[i]||'').trim().replace(/[\r\n]/g,'');
+    });
+    return obj;
+  }).filter(o => Object.values(o).some(v => v !== ''));
+}
+
+function parseCSVLine(line) {
+  const result = []; let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur);
+  return result;
+}
+
+async function loadDecisoesData() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${DECISOES_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('Decisoes')}&t=${Date.now()}`;
+    const r = await fetch(url);
+    const txt = await r.text();
+    state.decisoes = parseCSV(txt);
+
+    const url2 = `https://docs.google.com/spreadsheets/d/${DECISOES_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('Revisoes')}&t=${Date.now()}`;
+    const r2 = await fetch(url2);
+    const txt2 = await r2.text();
+    state.revisoes = parseCSV(txt2);
+    
+    const emRevisao = state.decisoes.filter(d => (d.estado||'').trim() === 'em_revisao');
+    console.log('Em revisao:', emRevisao.length, emRevisao.map(d => d.n_encomenda));
+    
+    state.decisoesLoaded = true;
+  } catch(e) {
+    console.warn('Decisoes nao carregadas:', e);
+  }
+}
+
+async function writeDecisao(payload) {
+  if (!DECISOES_SCRIPT_URL || DECISOES_SCRIPT_URL.includes('COLOCA')) {
+    return true;
+  }
+  try {
+    const r = await fetch(DECISOES_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ ...payload, token: 'JPOWER2026' })
+    });
+    const data = await r.json();
+    return data.ok;
+  } catch(e) {
+    console.error('Erro ao escrever decisao:', e);
+    return false;
+  }
+}
+
+async function loadAllData() {
+  state.loading = true; state.loadErr = null; render();
+  try {
+    const [pend, plaf, encA, encF, vend] = await Promise.all([
+      loadSheet('Pendentes'), loadSheet('Plafond'),
+      loadSheet('Enc Autoriz'), loadSheet('Enc Faturar'),
+      loadSheet('Vendedores')
+    ]);
+    state.pendentes = pend;
+    state.plafond = plaf;
+    state.encAutoriz = encA;
+    state.encFaturar = encF;
+    state.vendedores = vend;
+    state.pipeline = buildPipeline(encA);
+    state.dataLoaded = true;
+    await loadDecisoesData();
+    mergePipelineStates();
+  } catch(e) {
+    state.loadErr = e.message;
+    console.error(e);
+  }
+  state.loading = false; render();
+}
+
+function empNome(cod) {
+  const c = String(cod).trim().padStart(3,'0');
+  return EMPRESAS_FIXAS[c] || EMPRESAS_FIXAS[String(cod).trim()] || cod;
+}
+
+function mergePipelineStates() {
+  state.pipeline.forEach(e => {
+    const dec = state.decisoes.find(d => String(d.n_encomenda||'').trim() === String(e.n_enc||'').trim());
+    if (dec && dec.estado) {
+      e.estado = (dec.estado||'').trim();
+      e.motivo_recusa = dec.motivo_recusa || '';
+      e.auth_manual_phc = dec.auth_manual_phc || '';
+      // If approved and PHC confirmed, update state
+      if (dec.estado === 'aprovada' && dec.auth_manual_phc && dec.auth_manual_phc.trim() !== '') {
+        e.estado = 'aprovada_phc';
+        e.auth_manual_phc = dec.auth_manual_phc;
+      }
+    }
+    const rev = state.revisoes.find(r => String(r.n_encomenda||'').trim() === String(e.n_enc||'').trim());
+    if (rev) {
+      e.revisao = rev;
+      }
+    if (e.estado === 'em_revisao') {
+      }
+  });
+}
+
+function buildPipeline(encA) {
+  const groups = {};
+  encA.forEach(r => {
+    const key = (r.N_Encomenda||'').trim();
+    if (!key) return;
+    if (!groups[key]) {
+      groups[key] = {
+        n_enc: key,
+        empresa: empNome(r.Empresa||''),
+        data: (r.DataEntrega||r.DataEncomenda||'').substring(0,10),
+        nif: (r.NIF||'').trim(),
+        nome: (r.nome||r.Nome||'').trim(),
+        vendedor: (r.Vendedor||'').trim(),
+        valor: 0, estado: 'por_autorizar', linhas: []
+      };
+    }
+    groups[key].valor += parseFloat((r.Valor||'0').replace(',','.')) || 0;
+    groups[key].linhas.push(r);
+  });
+  return Object.values(groups).sort((a, b) => {
+    // 1. Data Entrega
+    if (a.data < b.data) return -1;
+    if (a.data > b.data) return 1;
+    // 2. NIF
+    if (a.nif < b.nif) return -1;
+    if (a.nif > b.nif) return 1;
+    // 3. Nº Encomenda
+    return String(a.n_enc).localeCompare(String(b.n_enc), undefined, {numeric: true});
+  });
+}
+
+// ── ANALISE ─────────────────────────────────────────────────────────────────
+function calcAnalise(nif) {
+  const n = nif.trim();
+  const pend = state.pendentes.filter(r => (r.NIF||'').trim() === n);
+  const plaf = state.plafond.filter(r => (r.ncont||'').trim() === n);
+  const encA = state.encAutoriz.filter(r => (r.NIF||'').trim() === n);
+  const encF = state.encFaturar.filter(r => (r.NIF||'').trim() === n);
+  const nome = pend.length > 0 ? (pend[0].Nome||'') : '';
+  const classif = pend.length > 0 ? (pend[0].Classificacao||'') : '';
+
+  const empresaData = EMPRESAS_LISTA.map(emp => {
+    const pE = pend.filter(r => empNome(r.EMP||'') === emp);
+    const plE = plaf.filter(r => empNome(r.EMP||'') === emp);
+    const aE = encA.filter(r => empNome(r.Empresa||'') === emp);
+    const fE = encF.filter(r => empNome(r.Empresa||'') === emp);
+    const plafAprov = plE.reduce((s,r) => s + (parseFloat((r['SOMA Plafonds']||r.Plafond||'0').replace(',','.')) || 0), 0);
+    const plafSeg = plE.reduce((s,r) => s + (parseFloat((r['Plafond Seguro']||'0').replace(',','.')) || 0), 0);
+    const seg = plE.length > 0 ? (plE[0].Seguradora||'') : '';
+    const cc = pE.reduce((s,r) => s + (parseFloat((r.Pendente||'0').replace(',','.')) || 0), 0);
+    const encVal = aE.reduce((s,r) => s + (parseFloat((r.Valor||'0').replace(',','.')) || 0), 0);
+    const fatVal = fE.reduce((s,r) => s + (parseFloat((r.Valor||'0').replace(',','.')) || 0), 0);
+    const plafNec = cc + encVal + fatVal;
+    const segUpper = (seg||"").toUpperCase().trim();
+    let risco = 0;
+    if (segUpper === "CYC" || segUpper === "CYC.") {
+      risco = plafNec > plafSeg ? plafSeg * 0.15 + (plafNec - plafSeg) : plafNec * 0.15;
+    } else if (segUpper === "COSEC") {
+      risco = plafNec > plafSeg ? plafSeg * 0.10 + (plafNec - plafSeg) : plafNec * 0.10;
+    } else {
+      risco = plafNec;
+    }
+    return { emp, plafAprov, plafSeg, seg, cc, encVal, fatVal, plafNec, risco };
+  }).filter(e => e.cc>0||e.encVal>0||e.fatVal>0||e.plafAprov>0);
+
+  const totais = empresaData.reduce((t,e) => ({
+    plafAprov:t.plafAprov+e.plafAprov, plafSeg:t.plafSeg+e.plafSeg,
+    cc:t.cc+e.cc, encVal:t.encVal+e.encVal, fatVal:t.fatVal+e.fatVal,
+    plafNec:t.plafNec+e.plafNec, risco:t.risco+e.risco
+  }), {plafAprov:0,plafSeg:0,cc:0,encVal:0,fatVal:0,plafNec:0,risco:0});
+
+  const vencido = pend.filter(r => parseInt(r.Dias_Venc||'0') > 0)
+    .reduce((s,r) => s + (parseFloat((r.Pendente||'0').replace(',','.')) || 0), 0);
+
+  const docs = [...pend].sort((a,b) => parseInt(b.Dias_Venc||0) - parseInt(a.Dias_Venc||0));
+  return { nif:n, nome, classif, empresaData, totais, vencido, docs };
+}
+
+// ── FORMAT ──────────────────────────────────────────────────────────────────
+function fmt2(v) {
+  if (!v || v === 0) return '—';
+  return new Intl.NumberFormat('pt-PT',{minimumFractionDigits:0,maximumFractionDigits:0}).format(v) + ' €';
+}
+function fmt(v) {
+  if (!v || v === 0) return '—';
+  return new Intl.NumberFormat('pt-PT',{minimumFractionDigits:0,maximumFractionDigits:0}).format(v) + ' €';
+}
+function fmtDec(v) {
+  if (!v || v === 0) return '—';
+  return new Intl.NumberFormat('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v) + ' €';
+}
+function badgeClass(e) { return {por_autorizar:'b-pending',aprovada:'b-approved',aprovada_phc:'b-phc',recusada:'b-refused',em_revisao:'b-review'}[e]||'b-pending'; }
+function badgeLabel(e) { return {por_autorizar:'Por Autorizar',aprovada:'Aprovada — Pendente PHC',aprovada_phc:'Aprovada — PHC Confirmado',recusada:'Recusada',em_revisao:'Em Revisão'}[e]||e; }
+function classColor(c) {
+  const u=(c||'').toUpperCase();
+  if(u==='BOM'||u==='BOA') return '#16a34a';
+  if(u==='REGULAR') return '#d97706';
+  if(u==='RISCO') return '#ea580c';
+  if(u==='BLOQUEADO'||u==='BLOQUEADA') return '#dc2626';
+  return '#6b7280';
+}
+
+// ── RENDER ──────────────────────────────────────────────────────────────────
+function renderSearchResults() {
+  if(!state.searchResults) return '';
+  if(state.searchResults.length===0) return `<div style="padding:10px 14px;background:var(--red-soft);color:var(--red);border-radius:var(--r);font-size:13px;margin-bottom:10px">Nenhum cliente encontrado.</div>`;
+  const items = state.searchResults.map(r=>`
+    <div class="search-result-item" data-nif="${r.nif}" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--g100);display:flex;gap:12px;align-items:center">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--g400);flex-shrink:0">${r.nif}</span>
+      <span style="font-size:13px;font-weight:500;color:var(--navy)">${r.nome}</span>
+    </div>`).join('');
+  return `<div style="background:#fff;border:1px solid var(--g200);border-radius:var(--r);margin-bottom:14px;box-shadow:var(--sh);overflow:hidden">
+    <div style="padding:8px 14px;background:var(--g50);font-size:11px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.05em">
+      ${state.searchResults.length} resultado(s) encontrado(s) — clica para ver a análise
+    </div>
+    ${items}
+  </div>`;
+}
+
+function render() {
+  document.getElementById('root').innerHTML = state.user ? renderApp() : renderLogin();
+  attachEvents();
+}
+
+function renderLogin() {
+  return `<div class="login-wrap"><div class="login-box">
+    <div class="login-logo">
+      <div class="login-brand">Gest<span>Autoriz</span></div>
+      <div class="login-sub">GestAutoriz · Gestão de Aprovações</div>
+    </div>
+    <div class="lf"><label>Email</label><input id="l-email" type="email" value="adm@jpower.pt"></div>
+    <div class="lf"><label>Password</label><input id="l-pass" type="password" value="jpower2026"></div>
+    <button class="login-btn" id="l-btn">Entrar</button>
+    <div class="login-err" id="l-err"></div>
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;text-align:center">
+      ADM: adm@jpower.pt / jpower2026<br>DCC: dcc@jpower.pt / dcc2026
+    </div>
+  </div></div>`;
+}
+
+function renderApp() {
+  const pendCount = state.pipeline.filter(e => e.estado==='por_autorizar').length;
+  const tabs = [
+    {id:'pipeline',label:'Pipeline',badge:pendCount||null},
+    {id:'analise',label:'Análise Cliente'},
+    {id:'dashboard',label:'Dashboard'},
+    {id:'antiguidade',label:'Antiguidade Saldos'},
+    {id:'config',label:'Configurações',adm:true},
+  ];
+  const nav = tabs.filter(t=>!t.adm||state.user.role==='ADM').map(t=>`
+    <div class="nav-tab ${state.tab===t.id?'active':''}" data-tab="${t.id}">
+      ${t.label}${t.badge?`<span class="n-badge">${t.badge}</span>`:''}
+    </div>`).join('');
+
+  let content = '';
+  if (state.loading) {
+    content = `<div class="loading"><div class="spinner"></div><div>A carregar dados do Google Sheets...</div></div>`;
+  } else if (state.loadErr) {
+    content = `<div class="err-box">⚠️ Erro ao carregar dados: ${state.loadErr}<br><br>
+      <button class="btn btn-primary btn-sm" id="btn-retry">Tentar novamente</button></div>`;
+  } else if (!state.dataLoaded) {
+    content = `<div class="empty">A aguardar dados...</div>`;
+  } else {
+    if (state.tab==='pipeline') content = renderPipeline();
+    else if (state.tab==='analise') content = renderAnalise();
+    else if (state.tab==='dashboard') content = renderDashboard();
+    else if (state.tab==='antiguidade') content = renderAntiguidade();
+    else if (state.tab==='config') content = renderConfig();
+  }
+
+  return `<div class="app">
+    <div class="topbar">
+      <div class="tb-left">
+        <div class="tb-brand">Gest<span>Autoriz</span></div>
+        <div class="tb-divider"></div>
+        <span style="font-size:11px;color:#93c5fd">Gestão de Aprovações</span>
+      </div>
+      <div class="tb-right">
+        <span class="tb-badge">${state.user.role}</span>
+        <span class="tb-user">${state.user.name}</span>
+        <button class="tb-logout" id="btn-logout">Sair</button>
+      </div>
+    </div>
+    <div class="nav">${nav}</div>
+    <div class="content">${content}</div>
+    ${state.modal?renderModal():''}
+  </div>`;
+}
+
+function renderPipeline() {
+  const list = state.pipeline;
+  const isDCC = state.user.role === 'DCC';
+  const pendCount = list.filter(e=>e.estado==='por_autorizar').length;
+  const revCount = list.filter(e=>e.estado==='em_revisao').length;
+  const aprCount = list.filter(e=>e.estado==='aprovada').length;
+  const totalVal = list.reduce((s,e)=>s+e.valor,0);
+
+  const rows = list.length === 0
+    ? `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--g400)">Sem encomendas em pipeline</td></tr>`
+    : list.map(e=>{
+        const rev = e.revisao || null;
+        const hasResposta = rev && (rev.resposta_1 || rev.resposta_2);
+        // aguarda resposta: estado pendente E (questao_1 sem resposta_1) OU (questao_2 sem resposta_2)
+        const aguardaResposta = rev && rev.estado === 'pendente' && (
+          (!rev.resposta_1 && rev.questao_1) || (!rev.resposta_2 && rev.questao_2)
+        );
+        const respondida = rev && rev.estado === 'respondida' && e.estado === 'em_revisao';
+
+        let rowStyle = '';
+        if (respondida) rowStyle = 'background:#eff6ff;';
+
+        let revisaoBlock = '';
+        if (rev && e.estado === 'em_revisao') {
+          revisaoBlock = `<tr style="background:#f0f7ff">
+            <td colspan="9" style="padding:8px 16px">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                ${rev.questao_1 ? `<div style="font-size:11px"><span style="font-weight:700;color:var(--navy-mid)">Questão ADM:</span> <span style="color:var(--g800)">${rev.questao_1}</span> <span style="color:var(--g400);font-size:10px">${rev.data_q1||''}</span></div>` : ''}
+                ${rev.resposta_1 ? `<div style="font-size:11px;padding-left:12px;border-left:2px solid var(--green)"><span style="font-weight:700;color:var(--green)">Resposta DCC:</span> <span style="color:var(--g800)">${rev.resposta_1}</span> <span style="color:var(--g400);font-size:10px">${rev.data_r1||''}</span></div>` : ''}
+                ${rev.questao_2 ? `<div style="font-size:11px"><span style="font-weight:700;color:var(--navy-mid)">Questão ADM (2ª):</span> <span style="color:var(--g800)">${rev.questao_2}</span></div>` : ''}
+                ${rev.resposta_2 ? `<div style="font-size:11px;padding-left:12px;border-left:2px solid var(--green)"><span style="font-weight:700;color:var(--green)">Resposta DCC (2ª):</span> <span style="color:var(--g800)">${rev.resposta_2}</span></div>` : ''}
+                ${isDCC && aguardaResposta ? `
+                  <div style="display:flex;gap:8px;align-items:flex-start;margin-top:4px">
+                    <textarea id="resp-${e.n_enc}" rows="2" style="flex:1;padding:7px 10px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:12px;outline:none;resize:vertical" placeholder="Escreve a tua resposta..."></textarea>
+                    <button class="btn btn-success btn-sm" data-action="responder" data-enc="${e.n_enc}">Responder</button>
+                  </div>` : ''}
+              </div>
+            </td>
+          </tr>`;
+        }
+
+        return `<tr style="${rowStyle}">
+          <td>${e.empresa}</td>
+          <td style="font-family:var(--mono);font-weight:600">${e.n_enc}</td>
+          <td>${e.data}</td>
+          <td><a href="#" class="link-analise" data-nif="${e.nif}" style="color:var(--navy);font-weight:600;text-decoration:none">${e.nome||e.nif}</a></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--g400)">${e.nif}</td>
+          <td class="r" style="font-weight:600">${fmt(e.valor)}</td>
+          <td>${e.vendedor}</td>
+          <td>
+            <span class="badge ${badgeClass(e.estado)}">${badgeLabel(e.estado)}</span>
+            ${respondida ? `<span style="font-size:10px;color:var(--accent);margin-left:4px">✉ Resposta recebida</span>` : ''}
+            ${aguardaResposta && !isDCC ? `<span style="font-size:10px;color:var(--amber);margin-left:4px">⏳ Aguarda DCC</span>` : ''}
+          </td>
+          <td>
+            <div class="act-btns">
+              <button class="btn btn-sm btn-ghost" data-action="analise" data-nif="${e.nif}">Ver</button>
+              ${!isDCC && e.estado==='por_autorizar' ? `
+                <button class="btn btn-sm btn-success" data-action="aprovar" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}">✓</button>
+                <button class="btn btn-sm btn-danger" data-action="recusar" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}">✗</button>
+                <button class="btn btn-sm btn-accent" data-action="revisao" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}" data-vendedor="${e.vendedor}">?</button>
+              ` : ''}
+              ${!isDCC && e.estado==='em_revisao' && respondida ? `
+                <button class="btn btn-sm btn-success" data-action="aprovar" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}">✓</button>
+                <button class="btn btn-sm btn-danger" data-action="recusar" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}">✗</button>
+                ${!rev.questao_2 ? `<button class="btn btn-sm btn-accent" data-action="revisao2" data-enc="${e.n_enc}" data-nif="${e.nif}" data-nome="${e.nome}" data-empresa="${e.empresa}" data-valor="${e.valor}" data-vendedor="${e.vendedor}">? 2ª</button>` : ''}
+              ` : ''}
+              ${!isDCC && e.estado==='aprovada' ? `
+                <button class="btn btn-sm" style="background:#065f46;color:#fff" data-action="confirmar_phc" data-enc="${e.n_enc}">✓ PHC</button>
+              ` : ''}
+              ${e.estado==='aprovada_phc' ? `
+                <span style="font-size:10px;color:#065f46;font-weight:600">✓ PHC ${e.auth_manual_phc ? e.auth_manual_phc.substring(0,10) : ''}</span>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
+        ${revisaoBlock}`;
+      }).join('');
+
+  return `
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-lbl">Total Pipeline</div><div class="kpi-val">${list.length}</div><div class="kpi-sub">${fmt(totalVal)}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Por Autorizar</div><div class="kpi-val amber">${pendCount}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Em Revisão</div><div class="kpi-val blue">${revCount}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Aprovadas</div><div class="kpi-val green">${aprCount}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title">Pipeline de Encomendas</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" id="btn-refresh">↻ Actualizar</button>
+        ${!isDCC && pendCount>0?`<button class="btn btn-primary btn-sm" id="btn-auto">⚡ Aprovação Automática</button>`:''}
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Empresa</th><th>Nº Enc</th><th>Data Entrega</th><th>Cliente</th>
+          <th>NIF</th><th class="r">Valor</th><th>Vendedor</th><th>Estado</th><th>Acções</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderAnalise() {
+  return `
+  <div class="nif-bar">
+    <input class="nif-input" id="nif-input" placeholder="NIF ou nome do cliente..." value="${state.nifAnalise}" style="width:280px">
+    <button class="btn btn-primary" id="btn-pesquisar">Pesquisar</button>
+    ${state.nifAnalise?`<button class="btn btn-ghost" id="btn-limpar-nif">Limpar</button>`:''}
+  </div>
+  ${state.searchResults ? renderSearchResults() : ''}
+  ${state.analiseData ? renderAnaliseCard(state.analiseData) : `<div class="empty"><div style="font-size:32px;margin-bottom:8px">🔍</div><div>Introduz um NIF para ver a análise de crédito</div></div>`}`;
+}
+
+function renderAnaliseCard(d) {
+  const clr = classColor(d.classif);
+  const empRows = d.empresaData.map((e,i)=>`
+    <tr style="background:${i%2===0?'#f9fafb':'#fff'}">
+      <td>${e.emp}</td>
+      <td class="r">${fmt(e.plafAprov)}</td>
+      <td class="r">${fmt(e.plafSeg)}</td>
+      <td class="r">${e.seg||'—'}</td>
+      <td class="r ${e.cc>0?'red':''}">${fmt(e.cc)}</td>
+      <td class="r">${fmt(e.encVal)}</td>
+      <td class="r">${fmt(e.fatVal)}</td>
+      <td class="r">${fmt(e.plafNec)}</td>
+      <td class="r ${e.risco>0?'red':''}">${fmt(e.risco)}</td>
+    </tr>`).join('');
+
+  const docRows = d.docs.slice(0,100).map((r,i)=>{
+    const dv = parseInt(r.Dias_Venc||'0');
+    return `<tr style="background:${i%2===0?'#f9fafb':'#fff'}">
+      <td>${empNome(r.EMP||'')}</td>
+      <td>${r.Doc||''}</td>
+      <td style="font-family:var(--mono)">${r.N_Doc||''}</td>
+      <td>${r.Data_Doc||''}</td>
+      <td>${r.Dt_Venc||''}</td>
+      <td class="r">${r.Dias_Emissao||''}</td>
+      <td class="r">${dv>0?`<span class="vp">${dv}</span>`:dv}</td>
+      <td class="r">${fmtDec(parseFloat((r.V_Inicial||'0').replace(',','.')))}</td>
+      <td class="r" style="font-weight:600">${fmtDec(parseFloat((r.Pendente||'0').replace(',','.')))}</td>
+      <td>${r.Vendedor||''}</td>
+    </tr>`;}).join('');
+
+  return `
+  <div style="border-radius:var(--r);overflow:hidden;border:1px solid var(--g200);box-shadow:var(--sh);margin-bottom:16px">
+    <div class="analise-hd">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.03em">ANÁLISE DE RISCO DE CRÉDITO POR CLIENTE</div>
+      <div style="font-size:11px;color:#93c5fd">GestAutoriz · AUTFIN</div>
+    </div>
+    <div class="analise-meta">
+      <div><div class="m-lbl">NIF Cliente</div><div class="m-val" style="font-family:var(--mono)">${d.nif}</div></div>
+      <div><div class="m-lbl">Cliente</div><div class="m-val cliente">${d.nome||'—'}</div></div>
+      <div><div class="m-lbl">Data de consulta</div><div class="m-val small">${new Date().toLocaleDateString('pt-PT')}</div></div>
+      <div><div class="m-lbl">Classificação</div><div class="m-val small">
+        <span style="background:${clr};color:#fff;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700">${d.classif||'—'}</span>
+      </div></div>
+    </div>
+    <div class="sec-bar">Plafond e Exposição por Empresa</div>
+    <div class="exp-wrap">
+      <table class="exp-tbl">
+        <thead><tr>
+          <th>Empresa</th><th class="r">Plafond<br>Aprovado</th><th class="r">Plafond<br>Seguro</th>
+          <th class="r">Seguradora</th><th class="r rh">Valores<br>em CC</th>
+          <th class="r">Valor<br>Encomenda</th><th class="r">Por<br>Faturar</th>
+          <th class="r">Plafond<br>Necessário</th><th class="r rh">Risco<br>Assumido</th>
+        </tr></thead>
+        <tbody>
+          ${empRows||'<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--g400)">Sem exposição registada</td></tr>'}
+          <tr class="tot">
+            <td></td>
+            <td class="r">${fmt(d.totais.plafAprov)}</td><td class="r">${fmt(d.totais.plafSeg)}</td>
+            <td></td>
+            <td class="r" style="color:var(--red)">${fmt(d.totais.cc)}</td>
+            <td class="r">${fmt(d.totais.encVal)}</td><td class="r">${fmt(d.totais.fatVal)}</td>
+            <td class="r">${fmt(d.totais.plafNec)}</td>
+            <td class="r" style="color:var(--red)">${fmt(d.totais.risco)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="venc-row">
+      <span style="font-size:11px;color:var(--g400)">Total já vencido:</span>
+      <span class="venc-pill">${fmt(d.vencido)}</span>
+    </div>
+    <div class="sec-bar" style="border-top:1px solid var(--g200)">Observações</div>
+    <div class="obs-box">—</div>
+    <div class="sec-bar" style="border-top:1px solid var(--g200)">Detalhe de Documentos em Aberto</div>
+    <div class="det-wrap">
+      <table class="det-tbl">
+        <thead><tr>
+          <th>Empresa</th><th>Tipo Doc</th><th>Nº Doc</th><th>Data Doc</th><th>Dt Venc</th>
+          <th class="r">Dias Em.</th><th class="r">Dias Venc</th>
+          <th class="r">V. Inicial</th><th class="r">Pendente</th><th>Vendedor</th>
+        </tr></thead>
+        <tbody>${docRows||'<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g400)">Sem documentos em aberto</td></tr>'}</tbody>
+      </table>
+    </div>
+    ${renderAnaliseRevisao(d)}
+    <div style="padding:12px 16px;background:var(--g50);border-top:1px solid var(--g200);display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" id="btn-print-analise">🖨 Imprimir</button>
+      ${state.user.role==='ADM'?`
+      <button class="btn btn-success" id="btn-aprovar-analise">✓ Aprovar</button>
+      <button class="btn btn-danger" id="btn-recusar-analise">✗ Recusar</button>
+      <button class="btn btn-accent" id="btn-revisao-analise">? Pedir Revisão ao DCC</button>`:''}
+    </div>
+  </div>`;
+}
+
+function renderAnaliseRevisao(d) {
+  if (!d || !d.nif) return '';
+  // Find pipeline entries for this NIF with em_revisao
+  const encs = state.pipeline.filter(p => p.nif === d.nif && p.estado === 'em_revisao' && p.revisao);
+  if (encs.length === 0) return '';
+  const isDCC = state.user.role === 'DCC';
+
+  const dialogs = encs.map(e => {
+    const rev = e.revisao;
+    const aguarda = rev.estado === 'pendente' && ((!rev.resposta_1 && rev.questao_1) || (!rev.resposta_2 && rev.questao_2));
+    return `<div style="margin-bottom:10px;padding:12px 14px;background:#f0f7ff;border-radius:var(--r);border:1px solid var(--accent-soft)">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:8px">Enc. ${e.n_enc} — ${e.empresa} — ${fmt2(e.valor)}</div>
+      ${rev.questao_1?`<div style="font-size:11px;margin-bottom:4px"><span style="font-weight:700;color:var(--navy-mid)">Questão ADM:</span> ${rev.questao_1} <span style="color:var(--g400);font-size:10px">${rev.data_q1||''}</span></div>`:''}
+      ${rev.resposta_1?`<div style="font-size:11px;padding-left:12px;border-left:2px solid var(--green);margin-bottom:4px"><span style="font-weight:700;color:var(--green)">Resposta DCC:</span> ${rev.resposta_1} <span style="color:var(--g400);font-size:10px">${rev.data_r1||''}</span></div>`:''}
+      ${rev.questao_2?`<div style="font-size:11px;margin-bottom:4px"><span style="font-weight:700;color:var(--navy-mid)">Questão ADM (2ª):</span> ${rev.questao_2}</div>`:''}
+      ${rev.resposta_2?`<div style="font-size:11px;padding-left:12px;border-left:2px solid var(--green);margin-bottom:4px"><span style="font-weight:700;color:var(--green)">Resposta DCC (2ª):</span> ${rev.resposta_2}</div>`:''}
+      ${isDCC && aguarda?`<div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px">
+        <textarea id="resp-analise-${e.n_enc}" rows="2" style="flex:1;padding:7px 10px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:12px;outline:none;resize:vertical" placeholder="Escreve a tua resposta..."></textarea>
+        <button class="btn btn-success btn-sm" data-action="responder" data-enc="${e.n_enc}">Responder</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+
+  return `<div class="sec-bar" style="border-top:1px solid var(--g200)">Diálogo de Revisão</div>
+    <div style="padding:14px 16px;background:#fff;border:1px solid var(--g200);border-top:none">${dialogs}</div>`;
+}
+
+function renderDashboard() {
+  const total = state.pipeline.length;
+  const apr = state.pipeline.filter(e=>e.estado==='aprovada').length;
+  const rec = state.pipeline.filter(e=>e.estado==='recusada').length;
+  const pen = state.pipeline.filter(e=>e.estado==='por_autorizar').length;
+  const totalPend = state.pendentes.reduce((s,r)=>s+(parseFloat((r.Pendente||'0').replace(',','.'))||0),0);
+  const totalVenc = state.pendentes.filter(r=>parseInt(r.Dias_Venc||0)>0).reduce((s,r)=>s+(parseFloat((r.Pendente||'0').replace(',','.'))||0),0);
+  return `
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-lbl">Total Pendente</div><div class="kpi-val" style="font-size:16px">${fmt(totalPend)}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Total Vencido</div><div class="kpi-val red" style="font-size:16px">${fmt(totalVenc)}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Encomendas Pipeline</div><div class="kpi-val">${total}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Por Autorizar</div><div class="kpi-val amber">${pen}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Dashboard</span></div>
+    <div style="padding:40px;text-align:center;color:var(--g400)">
+      <div style="font-size:32px;margin-bottom:8px">📊</div>
+      <div>Indicadores históricos disponíveis na Fase 6.</div>
+    </div>
+  </div>`;
+}
+
+function renderAntiguidade() {
+  const INTERVALS = [
+    '0 | Não vencido','A | < 10 dias','B | 10 <> 30 dias',
+    'C | 30 <> 60 dias','D | 60<>120 dias','E | > 120 dias'
+  ];
+  const INT_COLORS = ['#dcfce7','#fef9c3','#fef3c7','#fed7aa','#fecaca','#fca5a5'];
+  const INT_TEXT = ['#16a34a','#ca8a04','#d97706','#ea580c','#dc2626','#b91c1c'];
+
+  // Build unique company list and vendor list for filters
+  const allEmpresas = [...new Set(state.pendentes.map(r=>empNome(r.EMP||'')))].filter(Boolean).sort();
+  const allVendedores = [...new Set(state.pendentes.map(r=>r.Vendedor||''))].filter(Boolean).sort();
+
+  const fEmp = state.antigFilter?.emp || '';
+  const fAntig = state.antigFilter?.antig || '';
+  const fVend = state.antigFilter?.vend || '';
+
+  // Filter pendentes
+  let pend = state.pendentes;
+  if (fEmp) pend = pend.filter(r => empNome(r.EMP||'') === fEmp);
+  if (fAntig) pend = pend.filter(r => (r.Antig_Saldo||'').trim() === fAntig);
+  if (fVend) pend = pend.filter(r => (r.Vendedor||'').trim() === fVend);
+
+  // Group by NIF + empresa
+  const groups = {};
+  pend.forEach(r => {
+    const nif = (r.NIF||'').trim();
+    const emp = empNome(r.EMP||'');
+    const key = nif + '|' + emp;
+    if (!groups[key]) {
+      groups[key] = { nome: r.Nome||'', nif, emp, totals: {}, total: 0 };
+      INTERVALS.forEach(iv => { groups[key].totals[iv] = 0; });
+      groups[key].totals['(em branco)'] = 0;
+    }
+    const iv = (r.Antig_Saldo||'').trim();
+    const v = parseFloat((r.Pendente||'0').replace(',','.')) || 0;
+    if (INTERVALS.includes(iv)) {
+      groups[key].totals[iv] += v;
+    } else {
+      groups[key].totals['(em branco)'] = (groups[key].totals['(em branco)'] || 0) + v;
+    }
+    groups[key].total += v;
+  });
+
+  const rows = Object.values(groups)
+    .filter(g => g.total !== 0)
+    .sort((a,b) => b.total - a.total)
+    .map((g, i) => {
+      const bg = i%2===0 ? '#f9fafb' : '#fff';
+      const cells = INTERVALS.map((iv, idx) => {
+        const v = g.totals[iv] || 0;
+        if (v === 0) return `<td class="r" style="background:${bg};color:var(--g300)">—</td>`;
+        return `<td class="r" style="background:${INT_COLORS[idx]};color:${INT_TEXT[idx]};font-weight:500">${fmt(v)}</td>`;
+      });
+      const blank = g.totals['(em branco)'] || 0;
+      const totalColor = g.total < 0 ? 'color:var(--red)' : '';
+      return `<tr>
+        <td style="background:${bg};font-weight:500">
+          <a href="#" class="link-antig-analise" data-nif="${g.nif}" style="color:var(--navy);text-decoration:none;font-weight:600">${g.nome}</a>
+        </td>
+        <td style="background:${bg};font-family:var(--mono);font-size:10px;color:var(--g400)">${g.nif}</td>
+        <td style="background:${bg}">${g.emp}</td>
+        ${cells.join('')}
+        <td class="r" style="background:${bg};color:var(--g400)">${blank ? fmt(blank) : '—'}</td>
+        <td class="r" style="background:${bg};font-weight:700;${totalColor}">${fmt(g.total)}</td>
+      </tr>`;
+    }).join('');
+
+  // Totals row
+  const colTotals = {};
+  INTERVALS.forEach(iv => { colTotals[iv] = 0; });
+  colTotals['(em branco)'] = 0;
+  let grandTotal = 0;
+  Object.values(groups).forEach(g => {
+    INTERVALS.forEach(iv => { colTotals[iv] += g.totals[iv] || 0; });
+    colTotals['(em branco)'] += g.totals['(em branco)'] || 0;
+    grandTotal += g.total;
+  });
+  const totalCells = INTERVALS.map((iv,idx) => `<td class="r" style="font-weight:700;background:${INT_COLORS[idx]};color:${INT_TEXT[idx]}">${colTotals[iv] ? fmt(colTotals[iv]) : '—'}</td>`).join('');
+
+  const nRows = Object.values(groups).filter(g=>g.total!==0).length;
+
+  return `
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-hd"><span class="card-title">Filtros</span></div>
+    <div style="padding:12px 16px;display:flex;gap:12px;flex-wrap:wrap">
+      <div>
+        <label style="font-size:10px;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">Empresa</label>
+        <select id="f-emp" style="padding:7px 10px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:12px;outline:none;min-width:160px">
+          <option value="">Todas</option>
+          ${allEmpresas.map(e=>`<option value="${e}" ${fEmp===e?'selected':''}>${e}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">Antiguidade</label>
+        <select id="f-antig" style="padding:7px 10px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:12px;outline:none;min-width:180px">
+          <option value="">Todos</option>
+          ${INTERVALS.map(iv=>`<option value="${iv}" ${fAntig===iv?'selected':''}>${iv}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">Vendedor</label>
+        <select id="f-vend" style="padding:7px 10px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:12px;outline:none;min-width:160px">
+          <option value="">Todos</option>
+          ${allVendedores.map(v=>`<option value="${v}" ${fVend===v?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:6px">
+        <button class="btn btn-primary btn-sm" id="btn-filtrar-antig">Filtrar</button>
+        <button class="btn btn-ghost btn-sm" id="btn-limpar-antig">Limpar</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title">Antiguidade de Saldos</span>
+      <span style="font-size:11px;color:var(--g400)">${nRows} cliente(s)</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Cliente</th><th>NIF</th><th>Empresa</th>
+          ${INTERVALS.map((iv,i)=>`<th class="r" style="background:${INT_COLORS[i]};color:${INT_TEXT[i]}">${iv}</th>`).join('')}
+          <th class="r" style="color:var(--g400)">(em branco)</th>
+          <th class="r">Total Geral</th>
+        </tr></thead>
+        <tbody>
+          ${rows || '<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--g400)">Sem dados</td></tr>'}
+          <tr style="border-top:2px solid var(--navy-mid)">
+            <td colspan="3" style="font-weight:700;background:#e8edf5">Total Geral</td>
+            ${totalCells}
+            <td class="r" style="background:#e8edf5;font-weight:700">${colTotals['(em branco)'] ? fmt(colTotals['(em branco)']) : '—'}</td>
+            <td class="r" style="background:#e8edf5;font-weight:700">${fmt(grandTotal)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderConfig() {
+  const vRows = state.vendedores.map((v,i)=>`
+    <tr style="background:${i%2===0?'#f9fafb':'#fff'}">
+      <td>${v.Vendedor||Object.values(v)[0]||'—'}</td>
+      <td>${v.email||Object.values(v)[1]||'—'}</td>
+    </tr>`).join('');
+  return `
+  <div class="card">
+    <div class="card-hd"><span class="card-title">Configurações</span></div>
+    <div style="padding:16px">
+      <div class="cfg-section">
+        <div class="cfg-section-title">Utilizadores</div>
+        <table>
+          <thead><tr><th>Nome</th><th>Email</th><th>Perfil</th></tr></thead>
+          <tbody>
+            <tr><td>David Castro</td><td>adm@jpower.pt</td><td><span class="badge b-approved">ADM</span></td></tr>
+            <tr style="background:#f9fafb"><td>Dep. Cobranças</td><td>dcc@jpower.pt</td><td><span class="badge b-review">DCC</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cfg-section">
+        <div class="cfg-section-title">Regras de Aprovação Automática</div>
+        <div class="rule-row">
+          <div>
+            <div class="rule-name">Regra Principal</div>
+            <div class="rule-desc">Plafond Necessário &lt; Plafond Aprovado E sem facturas vencidas há mais de 3 dias (consolidado grupo)</div>
+          </div>
+          <div class="toggle on" id="toggle-regra"></div>
+        </div>
+      </div>
+      <div class="cfg-section">
+        <div class="cfg-section-title">Vendedores (${state.vendedores.length})</div>
+        <table>
+          <thead><tr><th>Nome</th><th>Email</th></tr></thead>
+          <tbody>${vRows}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderModal() {
+  const m = state.modal;
+  if (m.type==='aprovar') return `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <div class="modal-title">Aprovar Encomenda ${m.enc}</div>
+        <div style="margin-bottom:12px;padding:10px 14px;background:var(--green-soft);border-radius:var(--r);font-size:13px">
+          <strong>${m.nome}</strong> &nbsp;·&nbsp; ${fmt2(parseFloat(m.valor||0))} 
+        </div>
+        <div class="modal-field"><label>Comentário (opcional)</label>
+          <textarea id="m-comentario" rows="2" placeholder="Justificação da aprovação (opcional)..."></textarea></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="m-cancel">Cancelar</button>
+          <button class="btn btn-success" id="m-confirm">✓ Confirmar Aprovação</button>
+        </div>
+      </div>
+    </div>`;
+  if (m.type==='recusar') return `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <div class="modal-title">Recusar Encomenda ${m.enc}</div>
+        <div class="modal-field"><label>Motivo (obrigatório)</label>
+          <textarea id="m-motivo" rows="3" placeholder="Indica o motivo da recusa..."></textarea></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="m-cancel">Cancelar</button>
+          <button class="btn btn-danger" id="m-confirm">Confirmar Recusa</button>
+        </div>
+      </div>
+    </div>`;
+  if (m.type==='selecionar') {
+    const labels = {aprovar:'Aprovar', recusar:'Recusar', revisao:'Pedir Revisão'};
+    const btnColors = {aprovar:'btn-success', recusar:'btn-danger', revisao:'btn-accent'};
+    const singleOnly = m.accao === 'revisao';
+    const rows = m.encs.map(e=>`
+      <label style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--g100);cursor:pointer;user-select:none" class="sel-row">
+        <input type="${singleOnly?'radio':'checkbox'}" name="enc-sel" value="${e.n_enc}" style="width:16px;height:16px;cursor:pointer;accent-color:var(--navy)">
+        <div style="flex:1;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--g400)">${e.n_enc}</span>
+            <span style="font-size:13px;font-weight:500;color:var(--navy);margin-left:8px">${e.empresa}</span>
+          </div>
+          <div style="text-align:right">
+            <span style="font-size:12px;font-weight:600">${fmt2(e.valor)}</span>
+            <span class="badge ${badgeClass(e.estado)}" style="margin-left:6px">${badgeLabel(e.estado)}</span>
+          </div>
+        </div>
+      </label>`).join('');
+    return `<div class="overlay" id="overlay">
+      <div class="modal">
+        <div class="modal-title">${labels[m.accao]} — Selecciona ${singleOnly?'a encomenda':'as encomendas'}</div>
+        <div style="margin-bottom:12px;font-size:12px;color:var(--g600)">
+          Este cliente tem ${m.encs.length} encomendas activas.
+          ${singleOnly?'Selecciona qual pretendes pedir revisão:':'Selecciona uma ou mais para '+labels[m.accao].toLowerCase()+':'}
+        </div>
+        <div style="border:1px solid var(--g200);border-radius:var(--r);overflow:hidden;max-height:300px;overflow-y:auto">${rows}</div>
+        ${!singleOnly?`<div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+          <label style="font-size:12px;color:var(--g600);cursor:pointer;display:flex;align-items:center;gap:6px">
+            <input type="checkbox" id="sel-all" style="accent-color:var(--navy)"> Seleccionar todas
+          </label>
+        </div>`:''}
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="m-cancel">Cancelar</button>
+          <button class="btn ${btnColors[m.accao]}" id="m-confirm-sel">${labels[m.accao]} seleccionadas</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  if (m.type==='recusar_batch') return `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <div class="modal-title">Recusar ${m.encs.length} encomenda(s)</div>
+        <div class="modal-field"><label>Motivo (obrigatório — aplicado a todas)</label>
+          <textarea id="m-motivo" rows="3" placeholder="Indica o motivo da recusa..."></textarea></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="m-cancel">Cancelar</button>
+          <button class="btn btn-danger" id="m-confirm">Confirmar Recusa</button>
+        </div>
+      </div>
+    </div>`;
+  if (m.type==='revisao') return `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <div class="modal-title">Pedir Revisão ao DCC</div>
+        <div class="modal-field"><label>Pergunta para o DCC</label>
+          <textarea id="m-questao" rows="3" placeholder="Ex: Qual a previsão de pagamento das facturas em atraso?"></textarea></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="m-cancel">Cancelar</button>
+          <button class="btn btn-accent" id="m-confirm">Enviar para DCC</button>
+        </div>
+      </div>
+    </div>`;
+  return '';
+}
+
+// ── EVENTS ──────────────────────────────────────────────────────────────────
+function attachEvents() {
+  const $=id=>document.getElementById(id);
+  const lBtn=$('l-btn');
+  if(lBtn) lBtn.onclick=()=>{
+    const email=($('l-email')||{}).value.trim().toLowerCase();
+    const pass=($('l-pass')||{}).value;
+    const u=USERS[email];
+    if(u&&u.password===pass){ state.user={email,role:u.role,name:u.name}; state.tab='pipeline'; loadAllData(); }
+    else { ($('l-err')||{}).textContent='Credenciais inválidas.'; }
+  };
+  ['l-email','l-pass'].forEach(id=>{ const el=$(id); if(el) el.onkeydown=e=>{ if(e.key==='Enter') lBtn&&lBtn.click(); }; });
+
+  const lo=$('btn-logout');
+  if(lo) lo.onclick=()=>{ state.user=null; state.dataLoaded=false; state.pipeline=[]; render(); };
+
+  const retry=$('btn-retry');
+  if(retry) retry.onclick=()=>loadAllData();
+
+  const refresh=$('btn-refresh');
+  if(refresh) refresh.onclick=async ()=>{
+    await loadAllData();
+  };
+
+  document.querySelectorAll('.nav-tab').forEach(t=>{ t.onclick=()=>{ state.tab=t.dataset.tab; render(); }; });
+
+  const nifBtn=$('btn-pesquisar');
+  if(nifBtn) nifBtn.onclick=()=>{
+    const v=(($('nif-input')||{}).value||'').trim();
+    if(!v) return;
+    // Check if it looks like a NIF (all digits)
+    if(/^\d{5,9}$/.test(v)){
+      state.nifAnalise=v; state.analiseData=calcAnalise(v); state.searchResults=null; render();
+    } else {
+      // Search by name with wildcard support
+      const q=v.toLowerCase().replace(/\*/g,'.*');
+      const regex=new RegExp('^'+q, 'i');
+      const matches=[...new Map(state.pendentes
+        .filter(r=>regex.test((r.Nome||'').toLowerCase()))
+        .map(r=>[r.NIF, {nif:r.NIF, nome:r.Nome}])).values()].slice(0,15);
+      if(matches.length===1){ state.nifAnalise=matches[0].nif; state.analiseData=calcAnalise(matches[0].nif); state.searchResults=null; }
+      else if(matches.length>1){ state.searchResults=matches; state.analiseData=null; }
+      else { state.searchResults=[]; state.analiseData=null; }
+      render();
+    }
+  };
+  const nifInput=$('nif-input');
+  if(nifInput) nifInput.onkeydown=e=>{ if(e.key==='Enter') nifBtn&&nifBtn.click(); };
+  const limpar=$('btn-limpar-nif');
+  if(limpar) limpar.onclick=()=>{ state.nifAnalise=''; state.analiseData=null; state.searchResults=null; render(); };
+  document.querySelectorAll('.search-result-item').forEach(item=>{
+    item.onclick=()=>{ const nif=item.dataset.nif; state.nifAnalise=nif; state.analiseData=calcAnalise(nif); state.searchResults=null; render(); };
+  });
+
+  document.querySelectorAll('.link-analise').forEach(a=>{
+    a.onclick=e=>{ e.preventDefault(); const nif=a.dataset.nif; state.tab='analise'; state.nifAnalise=nif; state.analiseData=calcAnalise(nif); render(); };
+  });
+
+  document.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.onclick=()=>{
+      const action=btn.dataset.action, enc=btn.dataset.enc, nif=btn.dataset.nif;
+      const nome=btn.dataset.nome||'', empresa=btn.dataset.empresa||'';
+      const valor=btn.dataset.valor||'', vendedor=btn.dataset.vendedor||'';
+      if(action==='analise'){ state.tab='analise'; state.nifAnalise=nif; state.analiseData=calcAnalise(nif); render(); }
+      else if(action==='aprovar'){
+        updateEstado(enc,'aprovada');
+        writeDecisao({action:'decisao',n_encomenda:enc,empresa,nif,nome,valor,estado:'aprovada',tipo_aprovacao:'manual',utilizador:state.user.name});
+      }
+      else if(action==='recusar'){ state.modal={type:'recusar',enc,nif,nome,empresa,valor}; render(); }
+      else if(action==='revisao'){ state.modal={type:'revisao',enc,nif,nome,empresa,valor,vendedor,ronda:1}; render(); }
+      else if(action==='revisao2'){ state.modal={type:'revisao',enc,nif,nome,empresa,valor,vendedor,ronda:2}; render(); }
+      else if(action==='confirmar_phc'){
+        const now = new Date().toLocaleString('pt-PT');
+        const authVal = now + ' — ' + state.user.name;
+        const enc2 = state.pipeline.find(p=>p.n_enc===enc);
+        if(enc2){ enc2.estado='aprovada_phc'; enc2.auth_manual_phc=authVal; }
+        writeDecisao({
+          action:'confirmar_phc',
+          n_encomenda:enc,
+          auth_manual_phc:authVal,
+          utilizador:state.user.name
+        });
+        render();
+      }
+      else if(action==='responder'){
+        const textarea=document.getElementById('resp-'+enc);
+        const resposta=(textarea||{}).value||'';
+        if(!resposta.trim()){ alert('Escreve a resposta antes de submeter.'); return; }
+        writeDecisao({action:'revisao_resposta',n_encomenda:enc,resposta,utilizador:state.user.name});
+        const rev=state.pipeline.find(p=>p.n_enc===enc);
+        if(rev){ if(!rev.revisao) rev.revisao={}; if(!rev.revisao.resposta_1){ rev.revisao.resposta_1=resposta; rev.revisao.data_r1=new Date().toLocaleString('pt-PT'); } else { rev.revisao.resposta_2=resposta; rev.revisao.data_r2=new Date().toLocaleString('pt-PT'); } rev.revisao.estado='respondida'; }
+        render();
+      }
+    };
+  });
+
+  const autoBtn=$('btn-auto');
+  if(autoBtn) autoBtn.onclick=async ()=>{
+    autoBtn.disabled=true;
+    autoBtn.textContent='A processar...';
+    let count=0;
+    const promises=[];
+    state.pipeline.forEach(e=>{
+      if(e.estado!=='por_autorizar') return;
+      const a=calcAnalise(e.nif);
+      const vencHa3=state.pendentes.filter(r=>(r.NIF||'').trim()===e.nif.trim()&&parseInt(r.Dias_Venc||0)>3).length>0;
+      const semRisco=a.totais.plafNec<=a.totais.plafAprov;
+      if(semRisco&&!vencHa3){
+        e.estado='aprovada';
+        count++;
+        promises.push(writeDecisao({
+          action:'decisao',
+          n_encomenda:e.n_enc,
+          empresa:e.empresa,
+          nif:e.nif,
+          nome:e.nome,
+          valor:String(e.valor),
+          estado:'aprovada',
+          tipo_aprovacao:'automatica',
+          utilizador:state.user.name,
+          motivo_recusa:''
+        }));
+      }
+    });
+    await Promise.all(promises);
+    autoBtn.disabled=false;
+    autoBtn.textContent='⚡ Aprovação Automática';
+    alert('Aprovação automática: ' + count + ' encomenda(s) aprovada(s) e gravada(s) no Sheets.');
+    render();
+  };
+
+  const btnPrint=$('btn-print-analise');
+  if(btnPrint) btnPrint.onclick=()=>{ window.print(); };
+  const btnAprA=$('btn-aprovar-analise');
+  if(btnAprA) btnAprA.onclick=()=>{
+    const d=state.analiseData;
+    if(!d) return;
+    const encs=state.pipeline.filter(p=>p.nif===d.nif&&p.estado==='por_autorizar');
+    if(encs.length===0){ alert('Sem encomendas por autorizar para este cliente.'); return; }
+    if(encs.length===1){
+      state.modal={type:'aprovar',enc:encs[0].n_enc,nif:encs[0].nif,nome:encs[0].nome,empresa:encs[0].empresa,valor:String(encs[0].valor)};
+    } else {
+      state.modal={type:'selecionar',accao:'aprovar',encs,nif:d.nif};
+    }
+    render();
+  };
+  const btnRecA=$('btn-recusar-analise');
+  if(btnRecA) btnRecA.onclick=()=>{
+    const d=state.analiseData;
+    if(!d) return;
+    const encs=state.pipeline.filter(p=>p.nif===d.nif&&p.estado==='por_autorizar');
+    if(encs.length===0){ alert('Sem encomendas por autorizar para este cliente.'); return; }
+    if(encs.length===1){
+      state.modal={type:'recusar',enc:encs[0].n_enc,nif:encs[0].nif,nome:encs[0].nome,empresa:encs[0].empresa,valor:String(encs[0].valor)};
+    } else {
+      state.modal={type:'selecionar',accao:'recusar',encs,nif:d.nif};
+    }
+    render();
+  };
+  const btnRevA=$('btn-revisao-analise');
+  if(btnRevA) btnRevA.onclick=()=>{
+    const d=state.analiseData;
+    if(!d) return;
+    const encs=state.pipeline.filter(p=>p.nif===d.nif&&(p.estado==='por_autorizar'||p.estado==='em_revisao'));
+    if(encs.length===0){ alert('Sem encomendas activas para este cliente.'); return; }
+    if(encs.length===1){
+      state.modal={type:'revisao',enc:encs[0].n_enc,nif:encs[0].nif,nome:encs[0].nome,empresa:encs[0].empresa,valor:String(encs[0].valor),vendedor:encs[0].vendedor,ronda:1};
+    } else {
+      state.modal={type:'selecionar',accao:'revisao',encs,nif:d.nif};
+    }
+    render();
+  };
+
+  const mCancel=$('m-cancel');
+  if(mCancel) mCancel.onclick=()=>{ state.modal=null; render(); };
+  const mConfirm=$('m-confirm');
+  if(mConfirm) mConfirm.onclick=()=>{
+    const m=state.modal;
+    if(m.type==='recusar_batch'){
+      const motivo=($('m-motivo')||{}).value||'';
+      if(!motivo.trim()){ alert('O motivo é obrigatório.'); return; }
+      const promises=m.encs.map(enc_sel=>{
+        const e=state.pipeline.find(p=>p.n_enc===enc_sel);
+        if(!e) return;
+        updateEstado(enc_sel,'recusada');
+        return writeDecisao({action:'decisao',n_encomenda:enc_sel,empresa:e.empresa,nif:e.nif,nome:e.nome,valor:String(e.valor),estado:'recusada',tipo_aprovacao:'manual',utilizador:state.user.name,motivo_recusa:motivo});
+      });
+      await Promise.all(promises);
+      state.modal=null; render();
+      return;
+    }
+    if(m.type==='aprovar'){
+      const comentario=($('m-comentario')||{}).value||'';
+      updateEstado(m.enc,'aprovada');
+      writeDecisao({action:'decisao',n_encomenda:m.enc,empresa:m.empresa||'',nif:m.nif||'',nome:m.nome||'',valor:m.valor||'',estado:'aprovada',tipo_aprovacao:'manual',utilizador:state.user.name,motivo_recusa:comentario});
+    } else if(m.type==='recusar'){
+      const motivo=($('m-motivo')||{}).value||'';
+      if(!motivo.trim()){ alert('O motivo é obrigatório.'); return; }
+      updateEstado(m.enc,'recusada');
+      writeDecisao({action:'decisao',n_encomenda:m.enc,empresa:m.empresa||'',nif:m.nif||'',nome:m.nome||'',valor:m.valor||'',estado:'recusada',tipo_aprovacao:'manual',utilizador:state.user.name,motivo_recusa:motivo});
+    } else if(m.type==='revisao'){
+      const questao=($('m-questao')||{}).value||'';
+      if(!questao.trim()){ alert('Escreve a questão antes de enviar.'); return; }
+      updateEstado(m.enc,'em_revisao');
+      const enc=state.pipeline.find(p=>p.n_enc===m.enc);
+      if(enc){ if(!enc.revisao) enc.revisao={}; if(!enc.revisao.questao_1){ enc.revisao.questao_1=questao; enc.revisao.data_q1=new Date().toLocaleString('pt-PT'); } else { enc.revisao.questao_2=questao; enc.revisao.data_q2=new Date().toLocaleString('pt-PT'); } enc.revisao.estado='pendente'; }
+      writeDecisao({action:'revisao_questao',n_encomenda:m.enc,nif:m.nif||'',nome:m.nome||'',empresa:m.empresa||'',valor:m.valor||'',vendedor:m.vendedor||'',questao,utilizador:state.user.name});
+      writeDecisao({action:'decisao',n_encomenda:m.enc,empresa:m.empresa||'',nif:m.nif||'',nome:m.nome||'',valor:m.valor||'',estado:'em_revisao',tipo_aprovacao:'manual',utilizador:state.user.name});
+    }
+    state.modal=null; render();
+  };
+  // Select all checkbox
+  const selAll=$('sel-all');
+  if(selAll) selAll.onchange=()=>{
+    document.querySelectorAll('input[name="enc-sel"]').forEach(cb=>{ cb.checked=selAll.checked; });
+  };
+
+  // Confirm selection button
+  const mConfirmSel=$('m-confirm-sel');
+  if(mConfirmSel) mConfirmSel.onclick=async ()=>{
+    const m=state.modal;
+    const selected=[...document.querySelectorAll('input[name="enc-sel"]:checked')].map(cb=>cb.value);
+    if(selected.length===0){ alert('Selecciona pelo menos uma encomenda.'); return; }
+    if(m.accao==='revisao'){
+      // For revisao, only 1 at a time - open revisao modal
+      const e=state.pipeline.find(p=>p.n_enc===selected[0]);
+      if(e){ state.modal={type:'revisao',enc:e.n_enc,nif:e.nif,nome:e.nome,empresa:e.empresa,valor:String(e.valor),vendedor:e.vendedor,ronda:1}; render(); }
+      return;
+    }
+    // For aprovar/recusar - process all selected
+    if(m.accao==='aprovar'){
+      state.modal=null;
+      const promises=selected.map(enc_sel=>{
+        const e=state.pipeline.find(p=>p.n_enc===enc_sel);
+        if(!e) return;
+        updateEstado(enc_sel,'aprovada');
+        return writeDecisao({action:'decisao',n_encomenda:enc_sel,empresa:e.empresa,nif:e.nif,nome:e.nome,valor:String(e.valor),estado:'aprovada',tipo_aprovacao:'manual',utilizador:state.user.name,motivo_recusa:''});
+      });
+      await Promise.all(promises);
+      alert(selected.length+' encomenda(s) aprovada(s).');
+      render();
+    } else if(m.accao==='recusar'){
+      // Need motivo - open recusar modal for batch
+      state.modal={type:'recusar_batch',encs:selected,nif:m.nif};
+      render();
+    }
+  };
+
+  const overlay=$('overlay');
+  if(overlay) overlay.onclick=e=>{ if(e.target===overlay){ state.modal=null; render(); } };
+  document.querySelectorAll('.link-antig-analise').forEach(a=>{
+    a.onclick=e=>{ e.preventDefault(); const nif=a.dataset.nif; state.tab='analise'; state.nifAnalise=nif; state.analiseData=calcAnalise(nif); state.searchResults=null; render(); };
+  });
+
+  const fBtnAntig=$('btn-filtrar-antig');
+  if(fBtnAntig) fBtnAntig.onclick=()=>{
+    state.antigFilter={
+      emp: ($('f-emp')||{}).value||'',
+      antig: ($('f-antig')||{}).value||'',
+      vend: ($('f-vend')||{}).value||''
+    };
+    render();
+  };
+  const fLimparAntig=$('btn-limpar-antig');
+  if(fLimparAntig) fLimparAntig.onclick=()=>{ state.antigFilter=null; render(); };
+
+  const tog=$('toggle-regra');
+  if(tog) tog.onclick=()=>tog.classList.toggle('on');
+}
+
+function updateEstado(enc, novoEstado) {
+  const e=state.pipeline.find(p=>p.n_enc===enc);
+  if(e){ e.estado=novoEstado; render(); }
+}
+
+render();
+</script>
+</body>
+</html>
