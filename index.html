@@ -369,8 +369,21 @@ function calcAnalise(nif) {
   const plaf = state.plafond.filter(r => (r.ncont||'').trim() === n);
   const encA = state.encAutoriz.filter(r => (r.NIF||'').trim() === n);
   const encF = state.encFaturar.filter(r => (r.NIF||'').trim() === n);
-  const nome = pend.length > 0 ? (pend[0].Nome||'') : '';
-  const classif = pend.length > 0 ? (pend[0].Classificacao||'') : '';
+  // Find nome from any available sheet
+  let nome = '';
+  let classif = '';
+  if (pend.length > 0) {
+    nome = pend[0].Nome || '';
+    classif = pend[0].Classificacao || '';
+  }
+  if (!nome) {
+    const encA = state.encAutoriz.find(r => (r.NIF||'').trim() === n);
+    if (encA) nome = encA.nome || encA.Nome || '';
+  }
+  if (!nome) {
+    const encF = state.encFaturar.find(r => (r.NIF||'').trim() === n);
+    if (encF) nome = encF.nome || encF.Nome || '';
+  }
 
   const empresaData = EMPRESAS_LISTA.map(emp => {
     const pE = pend.filter(r => empNome(r.EMP||'') === emp);
@@ -1602,7 +1615,7 @@ function updateEstado(enc, novoEstado) {
   if(e){ e.estado=novoEstado; render(); }
 }
 
-// Auto-refresh every 150 seconds
+// Auto-refresh every 30 seconds
 let autoRefreshTimer = null;
 function startAutoRefresh() {
   if (autoRefreshTimer) clearInterval(autoRefreshTimer);
@@ -1610,7 +1623,7 @@ function startAutoRefresh() {
     if (state.user && state.dataLoaded && !state.loading) {
       await loadAllData();
     }
-  }, 30000);
+  }, 180000);
 }
 
 // Global event delegation for dynamically rendered buttons
