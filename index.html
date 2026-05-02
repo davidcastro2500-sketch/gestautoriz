@@ -458,8 +458,22 @@ function render() {
 function renderLogin() {
   return `<div class="login-wrap"><div class="login-box">
     <div class="login-logo">
-      <div class="login-brand">Gest<span>Autoriz</span></div>
-      <div class="login-sub">GestAutoriz · Gestão de Aprovações</div>
+      <svg width="220" height="72" viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:4px">
+        <circle cx="120" cy="140" r="80" fill="#1e3a5f"/>
+        <circle cx="120" cy="140" r="72" fill="none" stroke="#2d5a8e" stroke-width="2.5"/>
+        <rect x="88" y="108" width="52" height="64" rx="5" fill="#ffffff" opacity="0.12"/>
+        <rect x="88" y="108" width="52" height="64" rx="5" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.4"/>
+        <line x1="97" y1="124" x2="130" y2="124" stroke="#ffffff" stroke-width="1.5" opacity="0.35" stroke-linecap="round"/>
+        <line x1="97" y1="132" x2="130" y2="132" stroke="#ffffff" stroke-width="1.5" opacity="0.35" stroke-linecap="round"/>
+        <line x1="97" y1="140" x2="118" y2="140" stroke="#ffffff" stroke-width="1.5" opacity="0.35" stroke-linecap="round"/>
+        <circle cx="148" cy="164" r="20" fill="#16a34a"/>
+        <circle cx="148" cy="164" r="20" fill="none" stroke="#1e3a5f" stroke-width="2.5"/>
+        <path d="M139 164 L145 171 L158 155" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="230" y="124" font-family="Arial,sans-serif" font-size="58" font-weight="700" fill="#1e3a5f" letter-spacing="-2">Gest</text>
+        <text x="373" y="124" font-family="Arial,sans-serif" font-size="58" font-weight="700" fill="#16a34a" letter-spacing="-2">Autoriz</text>
+        <text x="230" y="160" font-family="Arial,sans-serif" font-size="18" font-weight="400" fill="#6b7280" letter-spacing="3">GESTÃO DE APROVAÇÕES</text>
+      </svg>
+      <div class="login-sub" style="margin-top:4px">Gestão de Aprovações de Encomendas</div>
     </div>
     <div class="lf"><label>Email</label><input id="l-email" type="email" value="adm@jpower.pt"></div>
     <div class="lf"><label>Password</label><input id="l-pass" type="password" value="jpower2026"></div>
@@ -504,7 +518,19 @@ function renderApp() {
   return `<div class="app">
     <div class="topbar">
       <div class="tb-left">
-        <div class="tb-brand">Gest<span>Autoriz</span></div>
+        <div class="tb-brand" style="display:flex;align-items:center;gap:8px">
+          <svg width="28" height="28" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="140" cy="140" r="130" fill="#1e3a5f"/>
+            <rect x="100" y="95" width="72" height="90" rx="6" fill="#ffffff" opacity="0.15"/>
+            <rect x="100" y="95" width="72" height="90" rx="6" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.5"/>
+            <line x1="113" y1="120" x2="158" y2="120" stroke="#ffffff" stroke-width="2" opacity="0.4" stroke-linecap="round"/>
+            <line x1="113" y1="133" x2="158" y2="133" stroke="#ffffff" stroke-width="2" opacity="0.4" stroke-linecap="round"/>
+            <line x1="113" y1="146" x2="140" y2="146" stroke="#ffffff" stroke-width="2" opacity="0.4" stroke-linecap="round"/>
+            <circle cx="195" cy="195" r="52" fill="#16a34a"/>
+            <path d="M174 195 L187 210 L218 175" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Gest<span>Autoriz</span>
+        </div>
         <div class="tb-divider"></div>
         <span style="font-size:11px;color:#93c5fd">Gestão de Aprovações</span>
       </div>
