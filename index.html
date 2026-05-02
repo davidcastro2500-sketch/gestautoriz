@@ -7,8 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --navy:#0f2240;--navy-mid:#1e3a5f;--navy-light:#2d5a8e;
-  --accent:#3b82f6;--accent-soft:#dbeafe;
+  --navy:#0e7490;--navy-mid:#0891b2;--navy-light:#cffafe;
+  --accent:#0891b2;--accent-soft:#e0f7fa;
   --green:#16a34a;--green-soft:#dcfce7;
   --red:#dc2626;--red-soft:#fee2e2;
   --amber:#d97706;--amber-soft:#fef3c7;
@@ -643,7 +643,15 @@ function renderPipeline() {
   <div class="card">
     <div class="card-hd">
       <span class="card-title">Pipeline de Encomendas</span>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="pipeline-filter" style="padding:5px 10px;border:1.5px solid var(--g200);border-radius:var(--r);font-family:var(--font);font-size:12px;outline:none">
+          <option value="">Todos os estados</option>
+          <option value="por_autorizar" ${state.pipelineFilter==='por_autorizar'?'selected':''}>Por Autorizar</option>
+          <option value="em_revisao" ${state.pipelineFilter==='em_revisao'?'selected':''}>Em Revisão</option>
+          <option value="aprovada" ${state.pipelineFilter==='aprovada'?'selected':''}>Aprovada — Pendente PHC</option>
+          <option value="aprovada_phc" ${state.pipelineFilter==='aprovada_phc'?'selected':''}>Aprovada — PHC Confirmado</option>
+          <option value="recusada" ${state.pipelineFilter==='recusada'?'selected':''}>Recusada</option>
+        </select>
         <button class="btn btn-ghost btn-sm" id="btn-refresh">↻ Actualizar</button>
         ${!isDCC && pendCount>0?`<button class="btn btn-primary btn-sm" id="btn-auto">⚡ Aprovação Automática</button>`:''}
       </div>
