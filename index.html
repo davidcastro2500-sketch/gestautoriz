@@ -653,7 +653,7 @@ function renderPipeline() {
           <option value="recusada" ${state.pipelineFilter==='recusada'?'selected':''}>Recusada</option>
         </select>
         <button class="btn btn-ghost btn-sm" id="btn-refresh">↻ Actualizar</button>
-        ${!isDCC && pendCount>0?`<button class="btn btn-primary btn-sm" id="btn-auto">⚡ Aprovação Automática</button>`:''}
+        ${pendCount>0?`<button class="btn btn-primary btn-sm" id="btn-auto">⚡ Aprovação Automática</button>`:''}
       </div>
     </div>
     <div class="tbl-wrap">
@@ -1602,7 +1602,7 @@ function updateEstado(enc, novoEstado) {
   if(e){ e.estado=novoEstado; render(); }
 }
 
-// Auto-refresh every 59 seconds
+// Auto-refresh every 30 seconds
 let autoRefreshTimer = null;
 function startAutoRefresh() {
   if (autoRefreshTimer) clearInterval(autoRefreshTimer);
