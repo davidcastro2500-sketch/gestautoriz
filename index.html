@@ -1602,7 +1602,7 @@ function updateEstado(enc, novoEstado) {
   if(e){ e.estado=novoEstado; render(); }
 }
 
-// Auto-refresh every 90 seconds
+// Auto-refresh every 150 seconds
 let autoRefreshTimer = null;
 function startAutoRefresh() {
   if (autoRefreshTimer) clearInterval(autoRefreshTimer);
