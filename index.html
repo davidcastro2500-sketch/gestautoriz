@@ -1260,6 +1260,38 @@ function renderModal() {
         </div>
       </div>
     </div>`;
+  if (m.type==='auto_confirm') {
+    const rows = m.eligible.map((e,i) => `
+      <tr style="background:${i%2===0?'var(--g50)':'#fff'}">
+        <td style="font-family:var(--mono);font-weight:600">${e.n_enc}</td>
+        <td>${e.empresa}</td>
+        <td>${e.nome||e.nif}</td>
+        <td style="text-align:right;font-family:var(--mono)">${fmt2(e.valor)}</td>
+      </tr>`).join('');
+    return `<div class="overlay" id="overlay">
+      <div class="modal" style="max-width:560px">
+        <div class="modal-title">⚡ Confirmar Aprovação Automática</div>
+        <div style="margin-bottom:12px;font-size:13px;color:var(--g600)">
+          As seguintes <strong>${m.eligible.length} encomenda(s)</strong> cumprem os critérios e serão aprovadas automaticamente:
+        </div>
+        <div style="border:1px solid var(--g200);border-radius:var(--r);overflow:hidden;max-height:240px;overflow-y:auto;margin-bottom:16px">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--navy);color:#fff">
+              <th style="padding:8px 12px;text-align:left">Nº Enc</th>
+              <th style="padding:8px 12px;text-align:left">Empresa</th>
+              <th style="padding:8px 12px;text-align:left">Cliente</th>
+              <th style="padding:8px 12px;text-align:right">Valor</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="m-cancel">Cancelar</button>
+          <button class="btn btn-success" id="m-confirm">✓ Confirmar Aprovação</button>
+        </div>
+      </div>
+    </div>`;
+  }
   if (m.type==='selecionar') {
     const labels = {aprovar:'Aprovar', recusar:'Recusar', revisao:'Pedir Revisão'};
     const btnColors = {aprovar:'btn-success', recusar:'btn-danger', revisao:'btn-accent'};
@@ -1390,8 +1422,8 @@ function attachEvents() {
       const valor=btn.dataset.valor||'', vendedor=btn.dataset.vendedor||'';
       if(action==='analise'){ state.tab='analise'; state.nifAnalise=nif; state.analiseData=calcAnalise(nif); render(); }
       else if(action==='aprovar'){
-        updateEstado(enc,'aprovada');
-        writeDecisao({action:'decisao',n_encomenda:enc,empresa,nif,nome,valor,estado:'aprovada',tipo_aprovacao:'manual',utilizador:state.user.name,vendedor_email:getVendedorEmail(state.pipeline.find(p=>p.n_enc===enc)),email_phc:state.emailConfig.emailPHC,email_dcc:state.emailConfig.emailDCC,email_adm:state.emailConfig.emailADM,email_teste:state.emailConfig.emailTeste,modo_teste:state.emailConfig.modoTeste});
+        state.modal={type:'aprovar',enc,nif,nome,empresa,valor:String(valor)};
+        render();
       }
       else if(action==='recusar'){ state.modal={type:'recusar',enc,nif,nome,empresa,valor}; render(); }
       else if(action==='revisao'){ state.modal={type:'revisao',enc,nif,nome,empresa,valor,vendedor,ronda:1}; render(); }
@@ -1422,37 +1454,18 @@ function attachEvents() {
   });
 
   const autoBtn=$('btn-auto');
-  if(autoBtn) autoBtn.onclick=async ()=>{
-    autoBtn.disabled=true;
-    autoBtn.textContent='A processar...';
-    let count=0;
-    const promises=[];
+  if(autoBtn) autoBtn.onclick=()=>{
+    // Count eligible encomendas first
+    let eligible=[];
     state.pipeline.forEach(e=>{
       if(e.estado!=='por_autorizar') return;
       const a=calcAnalise(e.nif);
       const vencHa3=state.pendentes.filter(r=>(r.NIF||'').trim()===e.nif.trim()&&parseInt(r.Dias_Venc||0)>3).length>0;
       const semRisco=a.totais.plafNec<=a.totais.plafAprov;
-      if(semRisco&&!vencHa3){
-        e.estado='aprovada';
-        count++;
-        promises.push(writeDecisao({
-          action:'decisao',
-          n_encomenda:e.n_enc,
-          empresa:e.empresa,
-          nif:e.nif,
-          nome:e.nome,
-          valor:String(e.valor),
-          estado:'aprovada',
-          tipo_aprovacao:'automatica',
-          utilizador:state.user.name,
-          motivo_recusa:''
-        }));
-      }
+      if(semRisco&&!vencHa3) eligible.push(e);
     });
-    await Promise.all(promises);
-    autoBtn.disabled=false;
-    autoBtn.textContent='⚡ Aprovação Automática';
-    alert('Aprovação automática: ' + count + ' encomenda(s) aprovada(s) e gravada(s) no Sheets.');
+    if(eligible.length===0){ alert('Nenhuma encomenda cumpre os critérios de aprovação automática.'); return; }
+    state.modal={type:'auto_confirm', eligible};
     render();
   };
 
@@ -1503,6 +1516,20 @@ function attachEvents() {
   const mConfirm=$('m-confirm');
   if(mConfirm) mConfirm.onclick=async ()=>{
     const m=state.modal;
+    if(m.type==='auto_confirm'){
+      state.modal=null;
+      const autoBtn2=document.getElementById('btn-auto');
+      if(autoBtn2){ autoBtn2.disabled=true; autoBtn2.textContent='A processar...'; }
+      const promises=m.eligible.map(e=>{
+        updateEstado(e.n_enc,'aprovada');
+        return writeDecisao({action:'decisao',n_encomenda:e.n_enc,empresa:e.empresa,nif:e.nif,nome:e.nome,valor:String(e.valor),estado:'aprovada',tipo_aprovacao:'automatica',utilizador:state.user.name,vendedor_email:getVendedorEmail(e),email_phc:state.emailConfig.emailPHC,email_dcc:state.emailConfig.emailDCC,email_adm:state.emailConfig.emailADM,email_teste:state.emailConfig.emailTeste,modo_teste:state.emailConfig.modoTeste});
+      });
+      await Promise.all(promises);
+      if(autoBtn2){ autoBtn2.disabled=false; autoBtn2.textContent='⚡ Aprovação Automática'; }
+      alert(m.eligible.length+' encomenda(s) aprovada(s) e gravada(s) no Sheets.');
+      render();
+      return;
+    }
     if(m.type==='recusar_batch'){
       const motivo=($('m-motivo')||{}).value||'';
       if(!motivo.trim()){ alert('O motivo é obrigatório.'); return; }
