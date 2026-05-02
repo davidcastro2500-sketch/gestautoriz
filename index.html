@@ -411,34 +411,58 @@ async function callAI(messages) {
 
 function buildClientContext(d) {
   if (!d) return '';
-  return `Dados do cliente para análise de crédito:
-NIF: ${d.nif}
-Nome: ${d.nome || 'Desconhecido'}
-Classificação: ${d.classif || 'Sem classificação'}
-
-Exposição por empresa:
-${d.empresaData.map(e => `- ${e.emp}: Plafond Aprovado ${e.plafAprov}€, Plafond Seguro ${e.plafSeg}€, Seguradora ${e.seg||'Nenhuma'}, Valores em CC ${e.cc}€, Encomendas ${e.encVal}€, Por Faturar ${e.fatVal}€, Plafond Necessário ${e.plafNec}€, Risco Assumido ${e.risco}€`).join('
-')}
-
-Totais consolidados:
-- Plafond Aprovado total: ${d.totais.plafAprov}€
-- Plafond Seguro total: ${d.totais.plafSeg}€
-- Valores em CC total: ${d.totais.cc}€
-- Plafond Necessário total: ${d.totais.plafNec}€
-- Risco Assumido total: ${d.totais.risco}€
-- Total já vencido: ${d.vencido}€
-
-Número de documentos em aberto: ${d.docs.length}
-Documentos com dias vencidos > 0: ${d.docs.filter(doc => parseInt(doc.Dias_Venc||0) > 0).length}
-Documento mais antigo em atraso: ${Math.max(0, ...d.docs.map(doc => parseInt(doc.Dias_Venc||0)))} dias`;
+  const empLines = d.empresaData.map(function(e) {
+    return '- ' + e.emp + ': PlafondAprov=' + e.plafAprov + 'EUR PlafondSeg=' + e.plafSeg + 'EUR Seg=' + (e.seg||'N/A') + ' CC=' + e.cc + 'EUR Enc=' + e.encVal + 'EUR Fat=' + e.fatVal + 'EUR PN=' + e.plafNec + 'EUR Risco=' + e.risco + 'EUR';
+  }).join('\n');
+  var vencidosCount = d.docs.filter(function(doc){ return parseInt(doc.Dias_Venc||0) > 0; }).length;
+  var maxDias = Math.max.apply(null, [0].concat(d.docs.map(function(doc){ return parseInt(doc.Dias_Venc||0); })));
+  return 'Dados do cliente para analise de credito:\n' +
+    'NIF: ' + d.nif + '\n' +
+    'Nome: ' + (d.nome||'Desconhecido') + '\n' +
+    'Classificacao: ' + (d.classif||'Sem classificacao') + '\n\n' +
+    'Exposicao por empresa:\n' + empLines + '\n\n' +
+    'Totais consolidados:\n' +
+    '- Plafond Aprovado: ' + d.totais.plafAprov + 'EUR\n' +
+    '- Plafond Seguro: ' + d.totais.plafSeg + 'EUR\n' +
+    '- Valores em CC: ' + d.totais.cc + 'EUR\n' +
+    '- Plafond Necessario: ' + d.totais.plafNec + 'EUR\n' +
+    '- Risco Assumido: ' + d.totais.risco + 'EUR\n' +
+    '- Total vencido: ' + d.vencido + 'EUR\n\n' +
+    'Documentos em aberto: ' + d.docs.length + '\n' +
+    'Documentos vencidos: ' + vencidosCount + '\n' +
+    'Atraso maximo: ' + maxDias + ' dias';
 }
 
-const AI_SYSTEM = `És um assistente especializado em análise de risco de crédito integrado numa aplicação de gestão de aprovações de encomendas. 
-O teu papel é ajudar o utilizador (ADM ou responsável de cobranças) a tomar decisões informadas sobre aprovação de encomendas.
-Responde sempre em português de Portugal, de forma concisa e directa. 
-Identifica riscos, padrões preocupantes e faz recomendações concretas.
-Quando não tens dados suficientes para uma análise histórica, diz-o claramente e faz a análise com os dados disponíveis.
-Mantém as respostas curtas — máximo 3-4 parágrafos. Usa bullet points quando fizer sentido.`;
+async function callAI(messages) {
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages
+      })
+    });
+    const data = await r.json();
+    return data.content?.[0]?.text || 'Não foi possível obter resposta.';
+  } catch(e) {
+    return 'Erro ao contactar o assistente: ' + e.message;
+  }
+}
+
+
+const AI_SYSTEM = 'Es um assistente especializado em analise de risco de credito. ' +
+  'O teu papel e ajudar o utilizador (ADM ou DCC) a tomar decisoes informadas sobre aprovacao de encomendas. ' +
+  'Responde sempre em portugues de Portugal, de forma concisa e directa. ' +
+  'Identifica riscos, padroes preocupantes e faz recomendacoes concretas. ' +
+  'Quando nao tens dados suficientes para analise historica, diz-o e analisa com os dados disponiveis. ' +
+  'Respostas curtas - maximo 3-4 paragrafos. Usa bullet points quando fizer sentido.';
 
 async function aiInit(d) {
   if (!d) return;
@@ -446,9 +470,8 @@ async function aiInit(d) {
   state.aiLoading = true;
   render();
   const context = buildClientContext(d);
-  const initPrompt = `${context}
+  var initPrompt = context + '\n\nFaz uma analise de risco sucinta deste cliente. Indica se recomendas aprovacao, recusa ou revisao. Destaca vencidos e riscos.';
 
-Faz uma análise de risco sucinta deste cliente e indica se recomendas aprovação, recusa ou revisão da encomenda actual.`;
   const resposta = await callAI([{ role: 'user', content: initPrompt }]);
   state.aiMessages = [
     { role: 'assistant', content: resposta }
@@ -464,12 +487,11 @@ async function aiSend(userMsg, d) {
   state.aiLoading = true;
   render();
   // Build messages for API - include context in first message
-  const apiMessages = [
-    { role: 'user', content: context + '
-
-' + state.aiMessages[0]?.content || userMsg },
-    ...state.aiMessages.slice(1).map(m => ({ role: m.role, content: m.content }))
-  ];
+  var firstContent3 = context + '\n\n' + (state.aiMessages.length > 0 ? state.aiMessages[0].content : userMsg);
+  var apiMessages = [{ role: 'user', content: firstContent3 }];
+  for (var mIdx = 1; mIdx < state.aiMessages.length; mIdx++) {
+    apiMessages.push({ role: state.aiMessages[mIdx].role, content: state.aiMessages[mIdx].content });
+  }
   const resposta = await callAI(apiMessages);
   state.aiMessages.push({ role: 'assistant', content: resposta });
   state.aiLoading = false;
@@ -907,8 +929,7 @@ function renderAIPanel(d) {
     if (m.role === 'assistant') return `
       <div class="ai-msg-bot">
         <div class="ai-avatar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
-        <div class="ai-bubble-bot">${m.content.replace(/
-/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>
+        <div class="ai-bubble-bot">${m.content.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>
       </div>`;
     return `
       <div class="ai-msg-user">
