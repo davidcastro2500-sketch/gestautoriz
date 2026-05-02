@@ -158,7 +158,6 @@ tbody tr:last-child td{border-bottom:none}
 <script>
 const SHEET_ID = '14x_SIrv0rS54yKLkdq-34-dZ9ecRqiLr-rM4QmUq7VY';
 const DECISOES_ID = '1M_nYJWtPCn1r11B3HCUcmB-6NklBleKRSfug7MHNufw';
-const ANTHROPIC_API_KEY = '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'; // Substitui pela tua chave sk-ant-...
 const DECISOES_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQL4WTEfABgFdna0PJEW5xot4snorxzKDLaKTnpw9GMyJDBI4QUVgkQ1CRowQX9RrV/exec';
 const USERS = {
   'adm@gestautoriz': { password: 'adm2026', role: 'ADM', name: 'David Castro' },
@@ -388,22 +387,14 @@ function buildPipeline(encA) {
 // ── ANALISE ─────────────────────────────────────────────────────────────────
 async function callAI(messages) {
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch(DECISOES_SCRIPT_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages
-      })
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'ai_chat', token: 'JPOWER2026', messages })
     });
     const data = await r.json();
-    return data.content?.[0]?.text || 'Não foi possível obter resposta.';
+    if (data.ok) return data.text;
+    return 'Erro: ' + (data.error || 'Sem resposta.');
   } catch(e) {
     return 'Erro ao contactar o assistente: ' + e.message;
   }
@@ -435,22 +426,14 @@ function buildClientContext(d) {
 
 async function callAI(messages) {
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch(DECISOES_SCRIPT_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages
-      })
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'ai_chat', token: 'JPOWER2026', messages })
     });
     const data = await r.json();
-    return data.content?.[0]?.text || 'Não foi possível obter resposta.';
+    if (data.ok) return data.text;
+    return 'Erro: ' + (data.error || 'Sem resposta.');
   } catch(e) {
     return 'Erro ao contactar o assistente: ' + e.message;
   }
